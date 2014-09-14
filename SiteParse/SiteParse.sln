@@ -5,6 +5,10 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteParse", "SiteParse\SiteParse.csproj", "{34C3BBFD-5ED7-4ADC-BEBF-32B3B3BBB100}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{39BD3B96-B199-4D39-899D-740951EFFB27}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalClassLibrary", "ExternalClassLibrary\ExternalClassLibrary.csproj", "{F6753B3E-8009-46E2-AB11-5134FEB33A21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,8 +19,15 @@ Global
 		{34C3BBFD-5ED7-4ADC-BEBF-32B3B3BBB100}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34C3BBFD-5ED7-4ADC-BEBF-32B3B3BBB100}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34C3BBFD-5ED7-4ADC-BEBF-32B3B3BBB100}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6753B3E-8009-46E2-AB11-5134FEB33A21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6753B3E-8009-46E2-AB11-5134FEB33A21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6753B3E-8009-46E2-AB11-5134FEB33A21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6753B3E-8009-46E2-AB11-5134FEB33A21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F6753B3E-8009-46E2-AB11-5134FEB33A21} = {39BD3B96-B199-4D39-899D-740951EFFB27}
 	EndGlobalSection
 EndGlobal

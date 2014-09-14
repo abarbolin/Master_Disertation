@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SiteParse.Communication.SqlManager;
 
 namespace SiteParse
 {
@@ -15,6 +16,11 @@ namespace SiteParse
         public ParseForm()
         {
             InitializeComponent();
+        }
+
+        private void ParseForm_Load(object sender, EventArgs e)
+        {
+            var s = SqlMethods.GetTestSql();
         }
     }
 }

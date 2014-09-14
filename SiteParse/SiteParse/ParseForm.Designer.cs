@@ -37,6 +37,7 @@
             this.ClientSize = new System.Drawing.Size(284, 261);
             this.Name = "ParseForm";
             this.Text = "Parse";
+            this.Load += new System.EventHandler(this.ParseForm_Load);
             this.ResumeLayout(false);
 
         }
