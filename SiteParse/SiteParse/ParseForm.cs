@@ -21,6 +21,7 @@ namespace SiteParse
         private void ParseForm_Load(object sender, EventArgs e)
         {
             var s = SqlMethods.GetTestSql();
+            var ss = "";
         }
     }
 }
