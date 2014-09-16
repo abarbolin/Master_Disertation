@@ -9,9 +9,9 @@ namespace SiteParse.Communication.SqlManager
 {
     public class SqlMethods: SqlMethodsBase
     {
-        public static List<Dictionary<string, string>> GetTestSql()
+        public static List<Dictionary<string, string>> GetTags()
         {
-            return SQL("select * from Tags");
+            return SQL("select name from Tags");
         }
     }
 }
