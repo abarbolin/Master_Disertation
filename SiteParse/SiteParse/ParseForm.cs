@@ -19,7 +19,7 @@ namespace SiteParse
         }
 
 
-        private string _url = "http://market.yandex.ru/model-spec.xml?modelid=10719239&hid=90639&track=char";
+        private string _url = "http://www.gazeta.ru/tech/news/2014/09/17/n_6487517.shtml";
 
         private void ParseForm_Load(object sender, EventArgs e)
         {
@@ -35,25 +35,35 @@ namespace SiteParse
         {
             var http = new HttpClient();
             var response = await http.GetByteArrayAsync(url);
-            String source = Encoding.GetEncoding("utf-8").GetString(response, 0, response.Length - 1);
+            String source = Encoding.GetEncoding("windows-1251").GetString(response, 0, response.Length - 1);
             source = WebUtility.HtmlDecode(source);
             var parseDoc = new HtmlDocument();
             parseDoc.LoadHtml(source);
 
+            ParseBox.Text = GetTextFromPage(parseDoc);
+        }
+
+        private string GetTextFromPage(HtmlDocument parseDoc)
+        {
+            var textResult = new StringBuilder();
             var nodes = parseDoc.DocumentNode.Descendants();
             var tags = SqlMethods.GetTags();
-            var textResult = new StringBuilder();
 
             foreach (var tag in tags)
             {
                 var currentNodes = nodes.Where(t => t.Name == tag["name"]);
+
                 foreach (var currentNode in currentNodes)
                 {
                     textResult.AppendLine(currentNode.InnerText);
                 }
             }
 
-            ParseBox.Text = textResult.ToString();
+            return textResult.ToString();
         }
+
+
+
+        
     }
 }
