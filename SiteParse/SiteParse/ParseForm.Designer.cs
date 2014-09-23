@@ -34,9 +34,10 @@
             // 
             // ParseBtn
             // 
-            this.ParseBtn.Location = new System.Drawing.Point(12, 25);
+            this.ParseBtn.Location = new System.Drawing.Point(9, 20);
+            this.ParseBtn.Margin = new System.Windows.Forms.Padding(2);
             this.ParseBtn.Name = "ParseBtn";
-            this.ParseBtn.Size = new System.Drawing.Size(75, 23);
+            this.ParseBtn.Size = new System.Drawing.Size(56, 19);
             this.ParseBtn.TabIndex = 0;
             this.ParseBtn.Text = "Parse";
             this.ParseBtn.UseVisualStyleBackColor = true;
@@ -44,20 +45,21 @@
             // 
             // ParseBox
             // 
-            this.ParseBox.Location = new System.Drawing.Point(125, 26);
+            this.ParseBox.Location = new System.Drawing.Point(94, 21);
+            this.ParseBox.Margin = new System.Windows.Forms.Padding(2);
             this.ParseBox.Multiline = true;
             this.ParseBox.Name = "ParseBox";
-            this.ParseBox.Size = new System.Drawing.Size(843, 454);
+            this.ParseBox.Size = new System.Drawing.Size(633, 370);
             this.ParseBox.TabIndex = 1;
+            this.ParseBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ParseBox_KeyDown);
             // 
             // ParseForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(990, 492);
+            this.ClientSize = new System.Drawing.Size(742, 400);
             this.Controls.Add(this.ParseBox);
             this.Controls.Add(this.ParseBtn);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "ParseForm";
             this.Text = "Parse";
             this.Load += new System.EventHandler(this.ParseForm_Load);

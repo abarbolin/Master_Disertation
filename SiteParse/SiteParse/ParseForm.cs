@@ -19,47 +19,109 @@ namespace SiteParse
         }
 
 
-        private string _url = "http://www.gazeta.ru/tech/news/2014/09/17/n_6487517.shtml";
+        private string _url = "http://news.yandex.ru/yandsearch?cl4url=www.novayagazeta.ru%2Fnews%2F1687336.html&lang=ru&lr=213";
+        private static StringBuilder _textResult;
+        private static List<Dictionary<string, string>> _tags;
+        private static List<string> _listOfTags;
 
+        /// <summary>
+        /// Событие загрузки формы
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ParseForm_Load(object sender, EventArgs e)
         {
+            _textResult = new StringBuilder();
+            _listOfTags = new List<string>();
             ParseBox.ScrollBars = ScrollBars.Vertical;
         }
-
+        /// <summary>
+        /// Событие начала парсинга страницы
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private  void ParseBtn_Click(object sender, EventArgs e)
         {
-           ParseHtml(_url);
+           GetHtml(_url);
         }
-
-        private async void ParseHtml(string url)
+        /// <summary>
+        /// Получаем Html-код страницы
+        /// </summary>
+        /// <param name="url">Ссылка на ресурс</param>
+        private async void GetHtml(string url)
         {
             var http = new HttpClient();
             var response = await http.GetByteArrayAsync(url);
-            String source = Encoding.GetEncoding("windows-1251").GetString(response, 0, response.Length - 1);
+            String source = Encoding.GetEncoding("utf-8").GetString(response, 0, response.Length - 1);
             source = WebUtility.HtmlDecode(source);
             var parseDoc = new HtmlDocument();
             parseDoc.LoadHtml(source);
-
-            ParseBox.Text = GetTextFromPage(parseDoc);
+            ParseBox.Text = GetHeadTags(parseDoc);
         }
-
-        private string GetTextFromPage(HtmlDocument parseDoc)
+        /// <summary>
+        /// Получаем верхние тэги страницы
+        /// </summary>
+        /// <param name="parseDoc">Html документ подверженный парсингу</param>
+        /// <returns></returns>
+        private string GetHeadTags(HtmlDocument parseDoc)
         {
-            var textResult = new StringBuilder();
             var nodes = parseDoc.DocumentNode.Descendants();
-            var tags = SqlMethods.GetTags();
+            _tags = SqlMethods.GetTags();
+            foreach(var tag in _tags)
+            {
+                _listOfTags.Add(tag["name"]);
+            }
 
-            foreach (var tag in tags)
+            foreach (var tag in _tags)
             {
                 var currentNodes = nodes.Where(t => t.Name == tag["name"]);
 
-                foreach (var currentNode in currentNodes)
+                foreach (var currentNode in currentNodes.Where(t =>t.ParentNode.Name=="body"))
                 {
-                    textResult.AppendLine(currentNode.InnerText);
+                    GetText(currentNode);
                 }
             }
 
-            return textResult.ToString();
+            return _textResult.ToString();
+        }
+        /// <summary>
+        /// Достаём текст
+        /// </summary>
+        /// <param name="curNode">Текущая ветка</param>
+        private void GetText(HtmlAgilityPack.HtmlNode curNode)
+        {
+            foreach(var childNode in curNode.ChildNodes)
+            {
+                if (childNode.Name == "#text" && _listOfTags.Contains(childNode.ParentNode.Name))
+                {
+                    string text = childNode.InnerHtml;
+                    if (!(text.Contains("<!--") || text.Contains("</")))
+                    {
+                        text = text.Replace("\n", "");
+                        if (text != "" && text!=" " && Char.IsLetterOrDigit(text[0]))
+                        {
+                            _textResult.AppendLine(text);
+                        }
+                    }
+                }
+                else
+                {
+                    GetText(childNode);
+                }
+            }
+        }
+        /// <summary>
+        /// По нажатию Ctrl+A выделяем  текст и копируем в буфер обмена
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ParseBox_KeyDown(object sender, KeyEventArgs e)
+        {
+           if ( Control.ModifierKeys==Keys.Control && e.KeyCode==Keys.A)
+           {
+               ParseBox.SelectAll();
+               Clipboard.SetText(ParseBox.Text);
+           }
         }
 
 
