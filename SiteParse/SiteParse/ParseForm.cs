@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 using HtmlAgilityPack;
 using SiteParse.Communication.SqlManager;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
@@ -13,17 +14,18 @@ namespace SiteParse
 {
     public partial class ParseForm : Form
     {
-        public ParseForm()
-        {
-            InitializeComponent();
-        }
 
-
-        private string _url = "http://news.yandex.ru/yandsearch?cl4url=www.novayagazeta.ru%2Fnews%2F1687336.html&lang=ru&lr=213";
+        private string _url = "https://mail.ru/";
         private static StringBuilder _textResult;
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
-
+        private static string encode;
+        public ParseForm()
+        {
+            InitializeComponent();
+            encode = GetEncoding(_url);
+            if (encode == String.Empty) { encode = "utf-8"; }
+        }
         /// <summary>
         /// Событие загрузки формы
         /// </summary>
@@ -52,11 +54,31 @@ namespace SiteParse
         {
             var http = new HttpClient();
             var response = await http.GetByteArrayAsync(url);
-            String source = Encoding.GetEncoding("utf-8").GetString(response, 0, response.Length - 1);
+            String source = Encoding.GetEncoding(encode).GetString(response, 0, response.Length - 1);
             source = WebUtility.HtmlDecode(source);
             var parseDoc = new HtmlDocument();
             parseDoc.LoadHtml(source);
             ParseBox.Text = GetHeadTags(parseDoc);
+        }
+        /// <summary>
+        /// Получаем кодировку страницы
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private string GetEncoding(string url)
+        {
+            WebRequest req  = WebRequest.Create(url);
+            String contentHeader = req.GetResponse().ContentType;
+            var contentArr = contentHeader.Split(';');
+            if (contentArr.Length > 1)
+            {
+                return contentArr[1].Replace("charset=", "").Trim();
+            }
+            else
+            {
+                return string.Empty;
+            }
+            
         }
         /// <summary>
         /// Получаем верхние тэги страницы
