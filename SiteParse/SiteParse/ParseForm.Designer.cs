@@ -30,6 +30,8 @@
         {
             this.ParseBtn = new System.Windows.Forms.Button();
             this.ParseBox = new System.Windows.Forms.TextBox();
+            this.urlBox = new System.Windows.Forms.TextBox();
+            this.urlLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // ParseBtn
@@ -45,19 +47,37 @@
             // 
             // ParseBox
             // 
-            this.ParseBox.Location = new System.Drawing.Point(94, 21);
+            this.ParseBox.Location = new System.Drawing.Point(94, 53);
             this.ParseBox.Margin = new System.Windows.Forms.Padding(2);
             this.ParseBox.Multiline = true;
             this.ParseBox.Name = "ParseBox";
-            this.ParseBox.Size = new System.Drawing.Size(633, 370);
+            this.ParseBox.Size = new System.Drawing.Size(633, 338);
             this.ParseBox.TabIndex = 1;
             this.ParseBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ParseBox_KeyDown);
+            // 
+            // urlBox
+            // 
+            this.urlBox.Location = new System.Drawing.Point(137, 19);
+            this.urlBox.Name = "urlBox";
+            this.urlBox.Size = new System.Drawing.Size(590, 20);
+            this.urlBox.TabIndex = 2;
+            // 
+            // urlLabel
+            // 
+            this.urlLabel.AutoSize = true;
+            this.urlLabel.Location = new System.Drawing.Point(96, 22);
+            this.urlLabel.Name = "urlLabel";
+            this.urlLabel.Size = new System.Drawing.Size(26, 13);
+            this.urlLabel.TabIndex = 3;
+            this.urlLabel.Text = "Url :";
             // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(742, 400);
+            this.Controls.Add(this.urlLabel);
+            this.Controls.Add(this.urlBox);
             this.Controls.Add(this.ParseBox);
             this.Controls.Add(this.ParseBtn);
             this.Name = "ParseForm";
@@ -72,6 +92,8 @@
 
         private System.Windows.Forms.Button ParseBtn;
         private System.Windows.Forms.TextBox ParseBox;
+        private System.Windows.Forms.TextBox urlBox;
+        private System.Windows.Forms.Label urlLabel;
     }
 }
 

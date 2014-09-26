@@ -14,8 +14,6 @@ namespace SiteParse
 {
     public partial class ParseForm : Form
     {
-
-        private string _url = "https://mail.ru/";
         private static StringBuilder _textResult;
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
@@ -42,7 +40,11 @@ namespace SiteParse
         /// <param name="e"></param>
         private  void ParseBtn_Click(object sender, EventArgs e)
         {
-           GetHtml(_url);
+            string url = urlBox.Text;
+            if (url != "")
+            {
+                GetHtml(url);
+            }
         }
         /// <summary>
         /// Получаем Html-код страницы
@@ -52,7 +54,7 @@ namespace SiteParse
         {
             var http = new HttpClient();
             var response = await http.GetByteArrayAsync(url);
-            String source = Encoding.GetEncoding(GetEncoding(_url)).GetString(response, 0, response.Length - 1);
+            String source = Encoding.GetEncoding(GetEncoding(url)).GetString(response, 0, response.Length - 1);
             source = WebUtility.HtmlDecode(source);
             var parseDoc = new HtmlDocument();
             parseDoc.LoadHtml(source);
