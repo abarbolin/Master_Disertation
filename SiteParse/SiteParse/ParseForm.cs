@@ -23,8 +23,6 @@ namespace SiteParse
         public ParseForm()
         {
             InitializeComponent();
-            encode = GetEncoding(_url);
-            if (encode == String.Empty) { encode = "utf-8"; }
         }
         /// <summary>
         /// Событие загрузки формы
@@ -54,7 +52,7 @@ namespace SiteParse
         {
             var http = new HttpClient();
             var response = await http.GetByteArrayAsync(url);
-            String source = Encoding.GetEncoding(encode).GetString(response, 0, response.Length - 1);
+            String source = Encoding.GetEncoding(GetEncoding(_url)).GetString(response, 0, response.Length - 1);
             source = WebUtility.HtmlDecode(source);
             var parseDoc = new HtmlDocument();
             parseDoc.LoadHtml(source);
@@ -74,11 +72,7 @@ namespace SiteParse
             {
                 return contentArr[1].Replace("charset=", "").Trim();
             }
-            else
-            {
-                return string.Empty;
-            }
-            
+            return "utf-8";
         }
         /// <summary>
         /// Получаем верхние тэги страницы
