@@ -40,6 +40,7 @@ namespace SiteParse
         /// <param name="e"></param>
         private  void ParseBtn_Click(object sender, EventArgs e)
         {
+            ParseBox.Clear();
             string url = urlBox.Text;
             if (url != "")
             {
@@ -65,7 +66,7 @@ namespace SiteParse
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        private string GetEncoding(string url)
+        private static string GetEncoding(string url)
         {
             WebRequest req  = WebRequest.Create(url);
             String contentHeader = req.GetResponse().ContentType;
@@ -106,7 +107,7 @@ namespace SiteParse
         /// Достаём текст
         /// </summary>
         /// <param name="curNode">Текущая ветка</param>
-        private void GetText(HtmlAgilityPack.HtmlNode curNode)
+        private void GetText(HtmlNode curNode)
         {
             foreach(var childNode in curNode.ChildNodes)
             {
@@ -115,8 +116,9 @@ namespace SiteParse
                     string text = childNode.InnerHtml;
                     if (!(text.Contains("<!--") || text.Contains("</")))
                     {
-                        text = text.Replace("\n", "");
-                        if (text != "" && text!=" " && Char.IsLetterOrDigit(text[0]))
+                        text = text.Replace("\n", String.Empty).Trim();
+                        text = ClearSpecialChars(text);
+                        if (text != String.Empty)
                         {
                             _textResult.AppendLine(text);
                         }
@@ -128,6 +130,19 @@ namespace SiteParse
                 }
             }
         }
+
+        public static string ClearSpecialChars(string text)
+        {
+            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch)).ToList();
+
+            foreach (var specialChar in specialChars)
+            {
+                text.Replace(specialChar.ToString(), String.Empty);
+            }
+
+            return text;
+        }
+
         /// <summary>
         /// По нажатию Ctrl+A выделяем  текст и копируем в буфер обмена
         /// </summary>

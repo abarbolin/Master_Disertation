@@ -61,6 +61,7 @@
             this.urlBox.Name = "urlBox";
             this.urlBox.Size = new System.Drawing.Size(590, 20);
             this.urlBox.TabIndex = 2;
+            this.urlBox.Text = "http://top.rbc.ru/politics/05/10/2014/5431511fcbb20f3858d57d15";
             // 
             // urlLabel
             // 
