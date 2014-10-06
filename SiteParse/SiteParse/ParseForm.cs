@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using HtmlAgilityPack;
+using LEMMATIZERLib;
 using SiteParse.Communication.SqlManager;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
@@ -77,6 +79,38 @@ namespace SiteParse
             }
             return "utf-8";
         }
+
+        public static void Lemmatizer(String text)
+        {
+            ILemmatizer lemmatizerRu = new LemmatizerRussian();
+            lemmatizerRu.LoadDictionariesRegistry();
+            IParadigmCollection piParadigmCollection = lemmatizerRu.CreateParadigmCollectionFromForm("мыла", 0, 0);
+
+            Console.Out.WriteLine(piParadigmCollection.Count);
+
+            for (int j = 0; j < piParadigmCollection.Count; j++)
+            {
+                object[] args = { j };
+
+                Type paradigmCollectionType = piParadigmCollection.GetType();
+
+                if (paradigmCollectionType != null)
+                {
+                    object Item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null, piParadigmCollection, args);
+                    Type itemType = Item.GetType();
+                    if (itemType != null)
+                    {
+                        object Norm = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, Item, null);
+                        Console.Out.WriteLine(Norm);
+                    }
+                    else
+                        Console.Out.WriteLine("itemType is null");
+                }
+                else
+                    Console.Out.WriteLine("paradigmCollectionType is null");
+            }  
+        }
+        
         /// <summary>
         /// Получаем верхние тэги страницы
         /// </summary>
@@ -100,6 +134,7 @@ namespace SiteParse
                     GetText(currentNode);
                 }
             }
+            Lemmatizer(_textResult.ToString());
 
             return _textResult.ToString();
         }
