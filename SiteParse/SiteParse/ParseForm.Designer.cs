@@ -32,6 +32,9 @@
             this.ParseBox = new System.Windows.Forms.TextBox();
             this.urlBox = new System.Windows.Forms.TextBox();
             this.urlLabel = new System.Windows.Forms.Label();
+            this.lemmaBox = new System.Windows.Forms.TextBox();
+            this.parseTextLbl = new System.Windows.Forms.Label();
+            this.lemmaLbl = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // ParseBtn
@@ -47,11 +50,11 @@
             // 
             // ParseBox
             // 
-            this.ParseBox.Location = new System.Drawing.Point(94, 53);
+            this.ParseBox.Location = new System.Drawing.Point(94, 72);
             this.ParseBox.Margin = new System.Windows.Forms.Padding(2);
             this.ParseBox.Multiline = true;
             this.ParseBox.Name = "ParseBox";
-            this.ParseBox.Size = new System.Drawing.Size(633, 338);
+            this.ParseBox.Size = new System.Drawing.Size(633, 262);
             this.ParseBox.TabIndex = 1;
             this.ParseBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ParseBox_KeyDown);
             // 
@@ -72,11 +75,42 @@
             this.urlLabel.TabIndex = 3;
             this.urlLabel.Text = "Url :";
             // 
+            // lemmaBox
+            // 
+            this.lemmaBox.Location = new System.Drawing.Point(94, 351);
+            this.lemmaBox.Margin = new System.Windows.Forms.Padding(2);
+            this.lemmaBox.Multiline = true;
+            this.lemmaBox.Name = "lemmaBox";
+            this.lemmaBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.lemmaBox.Size = new System.Drawing.Size(633, 299);
+            this.lemmaBox.TabIndex = 4;
+            // 
+            // parseTextLbl
+            // 
+            this.parseTextLbl.AutoSize = true;
+            this.parseTextLbl.Location = new System.Drawing.Point(96, 57);
+            this.parseTextLbl.Name = "parseTextLbl";
+            this.parseTextLbl.Size = new System.Drawing.Size(120, 13);
+            this.parseTextLbl.TabIndex = 5;
+            this.parseTextLbl.Text = "Информация с сайта :";
+            // 
+            // lemmaLbl
+            // 
+            this.lemmaLbl.AutoSize = true;
+            this.lemmaLbl.Location = new System.Drawing.Point(96, 336);
+            this.lemmaLbl.Name = "lemmaLbl";
+            this.lemmaLbl.Size = new System.Drawing.Size(49, 13);
+            this.lemmaLbl.TabIndex = 6;
+            this.lemmaLbl.Text = "Лемма :";
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(742, 400);
+            this.ClientSize = new System.Drawing.Size(739, 661);
+            this.Controls.Add(this.lemmaLbl);
+            this.Controls.Add(this.parseTextLbl);
+            this.Controls.Add(this.lemmaBox);
             this.Controls.Add(this.urlLabel);
             this.Controls.Add(this.urlBox);
             this.Controls.Add(this.ParseBox);
@@ -95,6 +129,9 @@
         private System.Windows.Forms.TextBox ParseBox;
         private System.Windows.Forms.TextBox urlBox;
         private System.Windows.Forms.Label urlLabel;
+        private System.Windows.Forms.TextBox lemmaBox;
+        private System.Windows.Forms.Label parseTextLbl;
+        private System.Windows.Forms.Label lemmaLbl;
     }
 }
 
