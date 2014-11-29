@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Windows.Forms;
 using HtmlAgilityPack;
@@ -19,6 +19,7 @@ namespace SiteParse
         private static StringBuilder _textResult;
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
+        private const int MinLength = 5;
 
 
         public ParseForm()
@@ -83,25 +84,41 @@ namespace SiteParse
         /// <param name="text"></param>
         public void Lemmatizer(String text)
         {
-            var stringArr = text.Split(' ', '\n','\r');
+            //  ' ',
+            var stringArr = text.Split('\n','\r');
+            stringArr = stringArr.Where(item => item != String.Empty).ToArray();
             var lemmaList= new List<string>();
             ILemmatizer lemmatizerRu = new LemmatizerRussian();
             lemmatizerRu.LoadDictionariesRegistry();
-            foreach (var piParadigmCollection in stringArr.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0)).Where(piParadigmCollection => piParadigmCollection.Count > 0))
+            foreach (var block in stringArr)
             {
-                for (var j = 0; j < 1; j++)
+                var blockSplit = block.Split(' ');
+                var stringBlock = new StringBuilder();
+                foreach (var piParadigmCollection in blockSplit.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0)).Where(piParadigmCollection => piParadigmCollection.Count > 0))
                 {
-                    object[] args = {j};           
-                    var paradigmCollectionType = piParadigmCollection.GetType();
-                    var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null, piParadigmCollection, args);
-                    var itemType = item.GetType();
-                    var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
-                    lemmaList.Add(lemma.ToString());
+                    for (var j = 0; j < 1; j++)
+                    {
+                        object[] args = { j };
+                        var paradigmCollectionType = piParadigmCollection.GetType();
+                        var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null, piParadigmCollection, args);
+                        var itemType = item.GetType();
+                        var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
+                        if (lemma.ToString().Length >= MinLength)
+                        {
+                            stringBlock.Append(lemma + " ");
+                            lemmaList.Add(lemma.ToString());
+                        }
+                    }
+                }
+                if (!String.IsNullOrEmpty(stringBlock.ToString()))
+                {
+                    findWordTB.AppendText(stringBlock +Environment.NewLine );
                 }
             }
             TermFrequencyMethod(lemmaList);
 
-        }      
+        }
+
         /// <summary>
         /// Получаем верхние тэги страницы
         /// </summary>
@@ -141,8 +158,8 @@ namespace SiteParse
                 {
                     var text = childNode.InnerHtml;
                     if (text.Contains("<!--") || text.Contains("</")) continue;
-                    text = text.Replace("\n", String.Empty).Trim();
                     text = ClearSpecialChars(text);
+                    text = text.Replace("\n", String.Empty).Trim();
                     if (text != String.Empty)
                     {
                         _textResult.AppendLine(text);
@@ -161,11 +178,11 @@ namespace SiteParse
         /// <returns>Текст без спецсимволов</returns>
         public static string ClearSpecialChars(string text)
         {
-            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch)).ToList();
+            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch) && ch!=' ').ToList();
 
             foreach (var specialChar in specialChars)
             {
-                text.Replace(specialChar.ToString(), String.Empty);
+                return text.Replace(specialChar.ToString(CultureInfo.InvariantCulture), String.Empty);
             }
 
             return text;
@@ -188,10 +205,11 @@ namespace SiteParse
         private void TermFrequencyMethod(List<string> lemmaList)
         {
             var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
+            var sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
             var totalCount = lemmaList.Count;
-            foreach (var item in withCountDict)
+            foreach (var item in sortedDict)
             {
-                lemmaBox.Text += Environment.NewLine + item.Key + "; Вес = " + (double) item.Value/totalCount ;
+                lemmaBox.Text += item.Key + "; Вес = " + (double)item.Value / totalCount + Environment.NewLine;
             }
             
         }
