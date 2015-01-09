@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using ExternalClassLibrary.SQL;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
 using SiteParse.Communication.SqlManager;
@@ -20,6 +21,7 @@ namespace SiteParse
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
         private const int MinLength = 5;
+        
 
 
         public ParseForm()
@@ -44,12 +46,19 @@ namespace SiteParse
         /// <param name="e"></param>
         private  void ParseBtn_Click(object sender, EventArgs e)
         {
+            ParseBtn.Visible = false;
+           
             ParseBox.Clear();
+            findWordTB.Clear();
+            lemmaBox.Clear();
+            _textResult.Clear();
             var url = urlBox.Text;
             if (url != String.Empty)
             {
                 GetHtml(url);
             }
+
+            ParseBtn.Visible = true;
         }
         /// <summary>
         /// Получаем Html-код страницы
@@ -57,13 +66,21 @@ namespace SiteParse
         /// <param name="url">Ссылка на ресурс</param>
         private async void GetHtml(string url)
         {
-            var http = new HttpClient();
-            var response = await http.GetByteArrayAsync(url);
-            var source = Encoding.GetEncoding(GetEncoding(url)).GetString(response, 0, response.Length - 1);
-            source = WebUtility.HtmlDecode(source);
-            var parseDoc = new HtmlDocument();
-            parseDoc.LoadHtml(source);
-            ParseBox.Text = GetHeadTags(parseDoc);
+            try
+            {
+                var http = new HttpClient();
+                var response = await http.GetByteArrayAsync(url);
+                var source = Encoding.GetEncoding(GetEncoding(url)).GetString(response, 0, response.Length - 1);
+                source = WebUtility.HtmlDecode(source);
+                var parseDoc = new HtmlDocument();
+                parseDoc.LoadHtml(source);
+                ParseBox.Text = GetHeadTags(parseDoc);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);  
+            }
+           
            
         }
         /// <summary>
@@ -119,6 +136,15 @@ namespace SiteParse
 
         }
 
+        private static void LoadTagToList()
+        {
+            _listOfTags.Clear();
+            _tags = SqlMethods.GetTags(); 
+            foreach (var tag in _tags)
+            {
+                _listOfTags.Add(tag["name"]);
+            }
+        }
         /// <summary>
         /// Получаем верхние тэги страницы
         /// </summary>
@@ -127,11 +153,7 @@ namespace SiteParse
         private string GetHeadTags(HtmlDocument parseDoc)
         {
             var nodes = parseDoc.DocumentNode.Descendants();
-            _tags = SqlMethods.GetTags();
-            foreach(var tag in _tags)
-            {
-                _listOfTags.Add(tag["name"]);
-            }
+            LoadTagToList();
 
             foreach (var tag in _tags)
             {
@@ -206,10 +228,17 @@ namespace SiteParse
         {
             var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
             var sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
-            var totalCount = lemmaList.Count;
+            var totalCount = sortedDict.Count();
+            
+            int pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
+
             foreach (var item in sortedDict)
             {
-                lemmaBox.Text += item.Key + "; Вес = " + (double)item.Value / totalCount + Environment.NewLine;
+                var freq = string.Format("{0:N6}", (double)item.Value / totalCount);
+                SqlMethods.AddWord(item.Key, pageId, freq);
+                //TODO проверка на уникальность
+                lemmaBox.Text += item.Key + "; Вес = " + freq + Environment.NewLine;
+
             }
             
         }

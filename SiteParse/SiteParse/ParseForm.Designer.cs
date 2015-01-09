@@ -116,7 +116,7 @@
             // 
             // findWordTB
             // 
-            this.findWordTB.Location = new System.Drawing.Point(94, 272);
+            this.findWordTB.Location = new System.Drawing.Point(97, 270);
             this.findWordTB.Margin = new System.Windows.Forms.Padding(2);
             this.findWordTB.Multiline = true;
             this.findWordTB.Name = "findWordTB";
