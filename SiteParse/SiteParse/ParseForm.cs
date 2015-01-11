@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -7,10 +8,10 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using ExternalClassLibrary.SQL;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
 using SiteParse.Communication.SqlManager;
+using SiteParse.Properties;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace SiteParse
@@ -21,12 +22,20 @@ namespace SiteParse
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
         private const int MinLength = 5;
-        
-
 
         public ParseForm()
         {
             InitializeComponent();
+        }
+
+        private void LoadPanelConfig()
+        {
+            waitingPanel.Location = new Point(
+            ClientSize.Width / 2 - waitingPanel.Size.Width / 2,
+            ClientSize.Height / 2 - waitingPanel.Size.Height / 2
+            );
+            waitingPanel.Anchor = AnchorStyles.None;
+            waitingPanel.BorderStyle = BorderStyle.Fixed3D;
         }
         /// <summary>
         /// Событие загрузки формы
@@ -37,6 +46,8 @@ namespace SiteParse
         {
             _textResult = new StringBuilder();
             _listOfTags = new List<string>();
+            errorLbl.Text = String.Empty;
+            LoadPanelConfig();
             ParseBox.ScrollBars = ScrollBars.Vertical;
         }
         /// <summary>
@@ -44,44 +55,56 @@ namespace SiteParse
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private  void ParseBtn_Click(object sender, EventArgs e)
+        private void ParseBtn_Click(object sender, EventArgs e)
         {
-            ParseBtn.Visible = false;
-           
+        
             ParseBox.Clear();
             findWordTB.Clear();
             lemmaBox.Clear();
             _textResult.Clear();
+
             var url = urlBox.Text;
             if (url != String.Empty)
             {
                 GetHtml(url);
             }
-
-            ParseBtn.Visible = true;
+         
         }
         /// <summary>
         /// Получаем Html-код страницы
         /// </summary>
         /// <param name="url">Ссылка на ресурс</param>
-        private async void GetHtml(string url)
+        private  void GetHtml(string url)
         {
             try
             {
+                waitingPanel.Visible = true;
                 var http = new HttpClient();
-                var response = await http.GetByteArrayAsync(url);
-                var source = Encoding.GetEncoding(GetEncoding(url)).GetString(response, 0, response.Length - 1);
-                source = WebUtility.HtmlDecode(source);
-                var parseDoc = new HtmlDocument();
-                parseDoc.LoadHtml(source);
-                ParseBox.Text = GetHeadTags(parseDoc);
+                var response = http.GetByteArrayAsync(url);
+               /* var response = await http.GetByteArrayAsync(url);*/
+                if (response.Result != null)
+                {
+                    var source = Encoding.GetEncoding(GetEncoding(url))
+                        .GetString(response.Result, 0, response.Result.Length - 1);
+                    source = WebUtility.HtmlDecode(source);
+
+                    var parseDoc = new HtmlDocument();
+                    parseDoc.LoadHtml(source);
+
+                    ParseBox.Text = GetHeadTags(parseDoc);
+                }
+                else
+                {
+                    errorLbl.Text=Resources.ParseForm_GetHtml_Page_is_not_available;
+                }
+                waitingPanel.Visible = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);  
+                MessageBox.Show(ex.Message);
             }
-           
-           
+
+
         }
         /// <summary>
         /// Получаем кодировку страницы
@@ -90,7 +113,7 @@ namespace SiteParse
         /// <returns></returns>
         private static string GetEncoding(string url)
         {
-            var req  = WebRequest.Create(url);
+            var req = WebRequest.Create(url);
             var contentHeader = req.GetResponse().ContentType;
             var contentArr = contentHeader.Split(';');
             return contentArr.Length > 1 ? contentArr[1].Replace("charset=", "").Trim() : "utf-8";
@@ -102,9 +125,9 @@ namespace SiteParse
         public void Lemmatizer(String text)
         {
             //  ' ',
-            var stringArr = text.Split('\n','\r');
+            var stringArr = text.Split('\n', '\r');
             stringArr = stringArr.Where(item => item != String.Empty).ToArray();
-            var lemmaList= new List<string>();
+            var lemmaList = new List<string>();
             ILemmatizer lemmatizerRu = new LemmatizerRussian();
             lemmatizerRu.LoadDictionariesRegistry();
             foreach (var block in stringArr)
@@ -120,16 +143,14 @@ namespace SiteParse
                         var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null, piParadigmCollection, args);
                         var itemType = item.GetType();
                         var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
-                        if (lemma.ToString().Length >= MinLength)
-                        {
-                            stringBlock.Append(lemma + " ");
-                            lemmaList.Add(lemma.ToString());
-                        }
+                        if (lemma.ToString().Length < MinLength) continue;
+                        stringBlock.Append(lemma + " ");
+                        lemmaList.Add(lemma.ToString());
                     }
                 }
                 if (!String.IsNullOrEmpty(stringBlock.ToString()))
                 {
-                    findWordTB.AppendText(stringBlock +Environment.NewLine );
+                    findWordTB.AppendText(stringBlock + Environment.NewLine);
                 }
             }
             TermFrequencyMethod(lemmaList);
@@ -139,7 +160,7 @@ namespace SiteParse
         private static void LoadTagToList()
         {
             _listOfTags.Clear();
-            _tags = SqlMethods.GetTags(); 
+            _tags = SqlMethods.GetTags();
             foreach (var tag in _tags)
             {
                 _listOfTags.Add(tag["name"]);
@@ -158,8 +179,7 @@ namespace SiteParse
             foreach (var tag in _tags)
             {
                 var currentNodes = nodes.Where(t => t.Name == tag["name"]);
-
-                foreach (var currentNode in currentNodes.Where(t =>t.ParentNode.Name=="body"))
+                foreach (var currentNode in currentNodes.Where(t => t.ParentNode.Name == "body"))
                 {
                     GetText(currentNode);
                 }
@@ -174,7 +194,7 @@ namespace SiteParse
         /// <param name="curNode">Текущая ветка</param>
         private static void GetText(HtmlNode curNode)
         {
-            foreach(var childNode in curNode.ChildNodes)
+            foreach (var childNode in curNode.ChildNodes)
             {
                 if (childNode.Name == "#text" && _listOfTags.Contains(childNode.ParentNode.Name))
                 {
@@ -200,7 +220,7 @@ namespace SiteParse
         /// <returns>Текст без спецсимволов</returns>
         public static string ClearSpecialChars(string text)
         {
-            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch) && ch!=' ').ToList();
+            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch) && ch != ' ').ToList();
 
             foreach (var specialChar in specialChars)
             {
@@ -224,23 +244,79 @@ namespace SiteParse
         /// Метод поиска частоты слова
         /// </summary>
         /// <param name="lemmaList"></param>
-        private void TermFrequencyMethod(List<string> lemmaList)
+        private void TermFrequencyMethod(IEnumerable<string> lemmaList)
         {
             var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
             var sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
             var totalCount = sortedDict.Count();
-            
-            int pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
+
+            if (SqlMethods.ExistsPage(urlBox.Text) == 0)
+            {
+                var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
+
+                foreach (var item in sortedDict)
+                {
+                    SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double)item.Value / totalCount));
+                }
+            }
+            else
+            {
+                 errorLbl.Text=Resources.ParseForm_TermFrequencyMethod_Данная_страница_уже_добавлена_в_БД;
+            }
 
             foreach (var item in sortedDict)
             {
-                var freq = string.Format("{0:N6}", (double)item.Value / totalCount);
-                SqlMethods.AddWord(item.Key, pageId, freq);
-                //TODO проверка на уникальность
-                lemmaBox.Text += item.Key + "; Вес = " + freq + Environment.NewLine;
-
+                lemmaBox.Text += item.Key + Resources.ParseForm_TermFrequencyMethod_ + string.Format("{0:N6}", (double)item.Value / totalCount) + Environment.NewLine;
             }
-            
+
+
         }
+        /// <summary>
+        /// Евклидово расстояние между векторами
+        /// </summary>
+        /// <param name="vect1"></param>
+        /// <param name="vect2"></param>
+        /// <returns></returns>
+        static double EuclideanDistance(double[] vect1, double[] vect2)
+        {
+            var sumSquaredDiffs = 0.0;
+            for (int i = 0; i < vect1.Length; ++i)
+            {
+                sumSquaredDiffs += Math.Pow((vect1[i] - vect2[i]), 2); 
+            }
+                
+            return Math.Sqrt(sumSquaredDiffs);
+        }
+
+        private void vectBtn_Click(object sender, EventArgs e)
+        {
+            var vect1 = SqlMethods.GetVectorForPage(11,7);
+            var vect2 = SqlMethods.GetVectorForPage(7, 11);
+            if (vect1.Count == vect2.Count)
+            {
+                var cnt = vect1.Count;
+                var vectDouble1 = new double[cnt];
+                for (int i = 0; i < cnt; i++)
+                {
+                    vectDouble1[i] = Convert.ToDouble(vect1[i]["freq"]);
+                }
+                var vectDouble2 = new double[cnt];
+                for (int i = 0; i < cnt; i++)
+                {
+                    vectDouble2[i] = Convert.ToDouble(vect2[i]["freq"]);
+                }
+
+                var distance = EuclideanDistance(vectDouble1, vectDouble2);
+            }
+            else
+            {
+                errorLbl.Text = Resources.ParseForm_vectBtn_Click_vector_length_not_equal;
+            }
+           
+
+
+        }
+
+
     }
 }

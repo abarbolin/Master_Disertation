@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace ExternalClassLibrary.SQL
@@ -32,6 +33,7 @@ namespace ExternalClassLibrary.SQL
             return cmd;
         }
 
+
         /// <summary>
         /// Возвращает список словарей вида key;value
         /// Где key - имя стобца, value - его значение
@@ -45,6 +47,15 @@ namespace ExternalClassLibrary.SQL
             using (var connection = Connect())
             {
                 return GetDictionary(RetutnCommand(sql, connection, p));
+            }
+        }
+
+        protected static List<Dictionary<string, string>> SQLByCommand(SqlCommand cmd)
+        {
+            using (var connection = Connect())
+            {
+                cmd.Connection = connection;
+                return GetDictionary(cmd);
             }
         }
 

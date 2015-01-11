@@ -37,6 +37,11 @@
             this.lemmaLbl = new System.Windows.Forms.Label();
             this.findWordLbl = new System.Windows.Forms.Label();
             this.findWordTB = new System.Windows.Forms.TextBox();
+            this.waitingPanel = new System.Windows.Forms.Panel();
+            this.waitLBL = new System.Windows.Forms.Label();
+            this.errorLbl = new System.Windows.Forms.Label();
+            this.vectBtn = new System.Windows.Forms.Button();
+            this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // ParseBtn
@@ -124,11 +129,55 @@
             this.findWordTB.Size = new System.Drawing.Size(958, 121);
             this.findWordTB.TabIndex = 7;
             // 
+            // waitingPanel
+            // 
+            this.waitingPanel.Controls.Add(this.waitLBL);
+            this.waitingPanel.Location = new System.Drawing.Point(460, 257);
+            this.waitingPanel.Name = "waitingPanel";
+            this.waitingPanel.Size = new System.Drawing.Size(200, 59);
+            this.waitingPanel.TabIndex = 9;
+            this.waitingPanel.Visible = false;
+            // 
+            // waitLBL
+            // 
+            this.waitLBL.AutoSize = true;
+            this.waitLBL.Font = new System.Drawing.Font("Stencil", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.waitLBL.Location = new System.Drawing.Point(47, 19);
+            this.waitLBL.Name = "waitLBL";
+            this.waitLBL.Size = new System.Drawing.Size(102, 22);
+            this.waitLBL.TabIndex = 0;
+            this.waitLBL.Text = "Wait..... ";
+            // 
+            // errorLbl
+            // 
+            this.errorLbl.AutoSize = true;
+            this.errorLbl.Font = new System.Drawing.Font("Wasco Sans", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.errorLbl.ForeColor = System.Drawing.Color.Red;
+            this.errorLbl.Location = new System.Drawing.Point(746, 17);
+            this.errorLbl.MaximumSize = new System.Drawing.Size(300, 50);
+            this.errorLbl.Name = "errorLbl";
+            this.errorLbl.Size = new System.Drawing.Size(58, 20);
+            this.errorLbl.TabIndex = 10;
+            this.errorLbl.Text = "label1";
+            // 
+            // vectBtn
+            // 
+            this.vectBtn.Location = new System.Drawing.Point(9, 44);
+            this.vectBtn.Name = "vectBtn";
+            this.vectBtn.Size = new System.Drawing.Size(75, 23);
+            this.vectBtn.TabIndex = 11;
+            this.vectBtn.Text = "button1";
+            this.vectBtn.UseVisualStyleBackColor = true;
+            this.vectBtn.Click += new System.EventHandler(this.vectBtn_Click);
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.vectBtn);
+            this.Controls.Add(this.errorLbl);
+            this.Controls.Add(this.waitingPanel);
             this.Controls.Add(this.findWordLbl);
             this.Controls.Add(this.findWordTB);
             this.Controls.Add(this.lemmaLbl);
@@ -141,6 +190,8 @@
             this.Name = "ParseForm";
             this.Text = "Parse";
             this.Load += new System.EventHandler(this.ParseForm_Load);
+            this.waitingPanel.ResumeLayout(false);
+            this.waitingPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -157,6 +208,10 @@
         private System.Windows.Forms.Label lemmaLbl;
         private System.Windows.Forms.Label findWordLbl;
         private System.Windows.Forms.TextBox findWordTB;
+        private System.Windows.Forms.Panel waitingPanel;
+        private System.Windows.Forms.Label waitLBL;
+        private System.Windows.Forms.Label errorLbl;
+        private System.Windows.Forms.Button vectBtn;
     }
 }
 

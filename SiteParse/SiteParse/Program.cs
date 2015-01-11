@@ -16,7 +16,7 @@ namespace SiteParse
             SqlMethodsBase.ConnectString = ConfigurationManager.ConnectionStrings["connString"].ToString();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ParseForm());
+            Application.Run(new ParseForm(){StartPosition = FormStartPosition.CenterScreen});
         }
     }
 }
