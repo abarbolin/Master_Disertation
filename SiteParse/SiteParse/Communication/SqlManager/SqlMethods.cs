@@ -10,6 +10,12 @@ namespace SiteParse.Communication.SqlManager
 {
     public class SqlMethods : SqlMethodsBase
     {
+
+        public static List<Dictionary<string, string>> GetSites()
+        {
+            return SQL("select id, url from Pages");
+        }
+
         /// <summary>
         /// Метод получения тэгов
         /// </summary>

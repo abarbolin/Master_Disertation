@@ -40,7 +40,7 @@
             this.waitingPanel = new System.Windows.Forms.Panel();
             this.waitLBL = new System.Windows.Forms.Label();
             this.errorLbl = new System.Windows.Forms.Label();
-            this.vectBtn = new System.Windows.Forms.Button();
+            this.infoButton = new System.Windows.Forms.Button();
             this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -160,22 +160,22 @@
             this.errorLbl.TabIndex = 10;
             this.errorLbl.Text = "label1";
             // 
-            // vectBtn
+            // infoButton
             // 
-            this.vectBtn.Location = new System.Drawing.Point(9, 44);
-            this.vectBtn.Name = "vectBtn";
-            this.vectBtn.Size = new System.Drawing.Size(75, 23);
-            this.vectBtn.TabIndex = 11;
-            this.vectBtn.Text = "button1";
-            this.vectBtn.UseVisualStyleBackColor = true;
-            this.vectBtn.Click += new System.EventHandler(this.vectBtn_Click);
+            this.infoButton.Location = new System.Drawing.Point(9, 47);
+            this.infoButton.Name = "infoButton";
+            this.infoButton.Size = new System.Drawing.Size(56, 23);
+            this.infoButton.TabIndex = 12;
+            this.infoButton.Text = "Info";
+            this.infoButton.UseVisualStyleBackColor = true;
+            this.infoButton.Click += new System.EventHandler(this.infoButton_Click);
             // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
-            this.Controls.Add(this.vectBtn);
+            this.Controls.Add(this.infoButton);
             this.Controls.Add(this.errorLbl);
             this.Controls.Add(this.waitingPanel);
             this.Controls.Add(this.findWordLbl);
@@ -211,7 +211,7 @@
         private System.Windows.Forms.Panel waitingPanel;
         private System.Windows.Forms.Label waitLBL;
         private System.Windows.Forms.Label errorLbl;
-        private System.Windows.Forms.Button vectBtn;
+        private System.Windows.Forms.Button infoButton;
     }
 }
 

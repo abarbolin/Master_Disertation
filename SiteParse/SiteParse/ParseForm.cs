@@ -271,50 +271,12 @@ namespace SiteParse
 
 
         }
-        /// <summary>
-        /// Евклидово расстояние между векторами
-        /// </summary>
-        /// <param name="vect1"></param>
-        /// <param name="vect2"></param>
-        /// <returns></returns>
-        static double EuclideanDistance(double[] vect1, double[] vect2)
+        
+
+        private void infoButton_Click(object sender, EventArgs e)
         {
-            var sumSquaredDiffs = 0.0;
-            for (int i = 0; i < vect1.Length; ++i)
-            {
-                sumSquaredDiffs += Math.Pow((vect1[i] - vect2[i]), 2); 
-            }
-                
-            return Math.Sqrt(sumSquaredDiffs);
-        }
-
-        private void vectBtn_Click(object sender, EventArgs e)
-        {
-            var vect1 = SqlMethods.GetVectorForPage(11,7);
-            var vect2 = SqlMethods.GetVectorForPage(7, 11);
-            if (vect1.Count == vect2.Count)
-            {
-                var cnt = vect1.Count;
-                var vectDouble1 = new double[cnt];
-                for (int i = 0; i < cnt; i++)
-                {
-                    vectDouble1[i] = Convert.ToDouble(vect1[i]["freq"]);
-                }
-                var vectDouble2 = new double[cnt];
-                for (int i = 0; i < cnt; i++)
-                {
-                    vectDouble2[i] = Convert.ToDouble(vect2[i]["freq"]);
-                }
-
-                var distance = EuclideanDistance(vectDouble1, vectDouble2);
-            }
-            else
-            {
-                errorLbl.Text = Resources.ParseForm_vectBtn_Click_vector_length_not_equal;
-            }
-           
-
-
+            var form = new InfoForm();
+            form.ShowDialog();
         }
 
 
