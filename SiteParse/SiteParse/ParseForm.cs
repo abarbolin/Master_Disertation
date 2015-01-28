@@ -49,6 +49,8 @@ namespace SiteParse
             errorLbl.Text = String.Empty;
             LoadPanelConfig();
             ParseBox.ScrollBars = ScrollBars.Vertical;
+
+            LoadTagToList();
         }
         /// <summary>
         /// Событие начала парсинга страницы
@@ -57,7 +59,6 @@ namespace SiteParse
         /// <param name="e"></param>
         private void ParseBtn_Click(object sender, EventArgs e)
         {
-        
             ParseBox.Clear();
             findWordTB.Clear();
             lemmaBox.Clear();
@@ -66,19 +67,47 @@ namespace SiteParse
             var url = urlBox.Text;
             if (url != String.Empty)
             {
-                GetHtml(url);
+                waitingPanel.Visible = true;
+                var htmlDoc = GetHtml(url);
+                if (htmlDoc != null)
+                {
+                    string pageText = GetTextFromPage(htmlDoc);
+                    ParseBox.Text = pageText;
+                    var lemmaList = Lemmatizer(pageText);
+                    var frequencyDict = TermFrequencyMethod(lemmaList);
+
+                    var totalCount = frequencyDict.Count();
+
+                    if (SqlMethods.ExistsPage(urlBox.Text) == 0)
+                    {
+                        var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
+
+                        foreach (var item in frequencyDict)
+                        {
+                            SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double)item.Value / totalCount));
+                        }
+                    }
+                    else
+                    {
+                        errorLbl.Text = Resources.ParseForm_TermFrequencyMethod_Данная_страница_уже_добавлена_в_БД;
+                    }
+
+                    foreach (var item in frequencyDict)
+                    {
+                        lemmaBox.Text += item.Key + Resources.ParseForm_TermFrequencyMethod_ + string.Format("{0:N6}", (double)item.Value / totalCount) + Environment.NewLine;
+                    }
+                }
+                waitingPanel.Visible = false;
             }
-         
         }
         /// <summary>
         /// Получаем Html-код страницы
         /// </summary>
         /// <param name="url">Ссылка на ресурс</param>
-        private  void GetHtml(string url)
+        private HtmlDocument GetHtml(string url)
         {
             try
             {
-                waitingPanel.Visible = true;
                 var http = new HttpClient();
                 var response = http.GetByteArrayAsync(url);
                /* var response = await http.GetByteArrayAsync(url);*/
@@ -90,21 +119,16 @@ namespace SiteParse
 
                     var parseDoc = new HtmlDocument();
                     parseDoc.LoadHtml(source);
-
-                    ParseBox.Text = GetHeadTags(parseDoc);
+                    return parseDoc;
                 }
-                else
-                {
-                    errorLbl.Text=Resources.ParseForm_GetHtml_Page_is_not_available;
-                }
-                waitingPanel.Visible = false;
+                errorLbl.Text=Resources.ParseForm_GetHtml_Page_is_not_available;
+                return null;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+                return null;
             }
-
-
         }
         /// <summary>
         /// Получаем кодировку страницы
@@ -122,7 +146,7 @@ namespace SiteParse
         /// Процедура лемматизации слова
         /// </summary>
         /// <param name="text"></param>
-        public void Lemmatizer(String text)
+        public List<string> Lemmatizer(String text)
         {
             //  ' ',
             var stringArr = text.Split('\n', '\r');
@@ -134,13 +158,17 @@ namespace SiteParse
             {
                 var blockSplit = block.Split(' ');
                 var stringBlock = new StringBuilder();
-                foreach (var piParadigmCollection in blockSplit.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0)).Where(piParadigmCollection => piParadigmCollection.Count > 0))
+                foreach (
+                    var piParadigmCollection in
+                        blockSplit.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0))
+                            .Where(piParadigmCollection => piParadigmCollection.Count > 0))
                 {
                     for (var j = 0; j < 1; j++)
                     {
-                        object[] args = { j };
+                        object[] args = {j};
                         var paradigmCollectionType = piParadigmCollection.GetType();
-                        var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null, piParadigmCollection, args);
+                        var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null,
+                            piParadigmCollection, args);
                         var itemType = item.GetType();
                         var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
                         if (lemma.ToString().Length < MinLength) continue;
@@ -153,8 +181,7 @@ namespace SiteParse
                     findWordTB.AppendText(stringBlock + Environment.NewLine);
                 }
             }
-            TermFrequencyMethod(lemmaList);
-
+            return lemmaList;
         }
 
         private static void LoadTagToList()
@@ -171,10 +198,9 @@ namespace SiteParse
         /// </summary>
         /// <param name="parseDoc">Html документ подверженный парсингу</param>
         /// <returns></returns>
-        private string GetHeadTags(HtmlDocument parseDoc)
+        private string GetTextFromPage(HtmlDocument parseDoc)
         {
             var nodes = parseDoc.DocumentNode.Descendants();
-            LoadTagToList();
 
             foreach (var tag in _tags)
             {
@@ -184,8 +210,7 @@ namespace SiteParse
                     GetText(currentNode);
                 }
             }
-            Lemmatizer(_textResult.ToString());
-
+            
             return _textResult.ToString();
         }
         /// <summary>
@@ -244,32 +269,11 @@ namespace SiteParse
         /// Метод поиска частоты слова
         /// </summary>
         /// <param name="lemmaList"></param>
-        private void TermFrequencyMethod(IEnumerable<string> lemmaList)
+        private IOrderedEnumerable<KeyValuePair<string, int>> TermFrequencyMethod(IEnumerable<string> lemmaList)
         {
             var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
-            var sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
-            var totalCount = sortedDict.Count();
-
-            if (SqlMethods.ExistsPage(urlBox.Text) == 0)
-            {
-                var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
-
-                foreach (var item in sortedDict)
-                {
-                    SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double)item.Value / totalCount));
-                }
-            }
-            else
-            {
-                 errorLbl.Text=Resources.ParseForm_TermFrequencyMethod_Данная_страница_уже_добавлена_в_БД;
-            }
-
-            foreach (var item in sortedDict)
-            {
-                lemmaBox.Text += item.Key + Resources.ParseForm_TermFrequencyMethod_ + string.Format("{0:N6}", (double)item.Value / totalCount) + Environment.NewLine;
-            }
-
-
+            IOrderedEnumerable<KeyValuePair<string, int>> sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
+            return sortedDict;
         }
         
 
