@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows.Forms;
 using SiteParse.Communication.SqlManager;
+using SiteParse.Distance;
 using SiteParse.Properties;
+
 
 namespace SiteParse
 {
     public partial class InfoForm : Form
     {
+       
         public InfoForm()
         {
             InitializeComponent();
@@ -29,29 +27,10 @@ namespace SiteParse
                 listSites1.Add(site["id"] + " " + site["url"]);
                 listSites2.Add(site["id"] + " " + site["url"]);
             }
-
             siteCompareLb1.DataSource = listSites1;
             siteCompareLb2.DataSource = listSites2;
         }
-
-        /// <summary>
-        /// Евклидово расстояние между векторами
-        /// </summary>
-        /// <param name="vect1"></param>
-        /// <param name="vect2"></param>
-        /// <returns></returns>
-        static double EuclideanDistance(double[] vect1, double[] vect2)
-        {
-            var sumSquaredDiffs = 0.0;
-            for (int i = 0; i < vect1.Length; ++i)
-            {
-                sumSquaredDiffs += Math.Pow((vect1[i] - vect2[i]), 2);
-            }
-
-            return Math.Sqrt(sumSquaredDiffs);
-        }
-
-        
+             
         private void distanceBtn_Click(object sender, EventArgs e)
         {
             var siteId1 = Convert.ToInt32(siteCompareLb1.SelectedItem.ToString().Split(' ')[0]);
@@ -61,24 +40,25 @@ namespace SiteParse
             var vect2 = SqlMethods.GetVectorForPage(siteId2, siteId1);
             if (vect1.Count == vect2.Count)
             {
-                var cnt = vect1.Count;
-                var vectDouble1 = new double[cnt];
-                for (int i = 0; i < cnt; i++)
-                {
-                    vectDouble1[i] = Convert.ToDouble(vect1[i]["freq"]);
-                }
-                var vectDouble2 = new double[cnt];
-                for (int i = 0; i < cnt; i++)
-                {
-                    vectDouble2[i] = Convert.ToDouble(vect2[i]["freq"]);
-                }
+                var vectDouble1 = HelpMethods.GetFrequenceArray(vect1); ;
 
-                var distance = EuclideanDistance(vectDouble1, vectDouble2);
-                distanceLbl.Text = distance.ToString();
+                var vectDouble2 = HelpMethods.GetFrequenceArray(vect2);
+                var distance = new EucledeanDistance().GetDistance(HelpMethods.ConvertDoubleToObjectArr(vectDouble1),
+                    HelpMethods.ConvertDoubleToObjectArr(vectDouble2));
+                distanceLbl.Text = distance.ToString(CultureInfo.InvariantCulture);
+
             }
             else
             {
+                MessageBox.Show(Resources.InfoForm_distanceBtn_Click_Формирование_векторов_произведено_с_ошибкой__Попробуйте_еще_раз);
             }
+        }
+
+
+        private void forelBtn_Click(object sender, EventArgs e)
+        {
+            var forel = new Forel();
+            forel.ShowDialog();
         }
     }
 }

@@ -22,6 +22,7 @@ namespace SiteParse
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
         private const int MinLength = 5;
+       
 
         public ParseForm()
         {
@@ -279,6 +280,7 @@ namespace SiteParse
             form.ShowDialog();
         }
 
+  
 
     }
 }

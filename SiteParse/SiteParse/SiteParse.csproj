@@ -54,13 +54,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithm\AbstractCriterionAlgorithm.cs" />
+    <Compile Include="Algorithm\DistanceCriterionAlgorithm.cs" />
+    <Compile Include="Algorithm\NumberCriterionAlgorithm.cs" />
+    <Compile Include="Cluster.cs" />
+    <Compile Include="ClusterPair.cs" />
+    <Compile Include="ClusterPairs.cs" />
     <Compile Include="Communication\SqlManager\SqlMethods.cs" />
+    <Compile Include="Distance\EucledeanDistance.cs" />
+    <Compile Include="Distance\JaccardDistance.cs" />
+    <Compile Include="Element.cs" />
+    <Compile Include="Forel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forel.Designer.cs">
+      <DependentUpon>Forel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Fusions\CompleteLinkage.cs" />
+    <Compile Include="Fusions\Fusion.cs" />
+    <Compile Include="Fusions\SingleLinkage.cs" />
+    <Compile Include="Geometry.cs" />
+    <Compile Include="HelpMethods.cs" />
+    <Compile Include="Distance\IDistanceMetric.cs" />
+    <Compile Include="IMethods.cs" />
     <Compile Include="InfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="InfoForm.Designer.cs">
       <DependentUpon>InfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MethodRealization.cs" />
     <Compile Include="ParseForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,6 +92,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Forel.resx">
+      <DependentUpon>Forel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="InfoForm.resx">
       <DependentUpon>InfoForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -106,6 +132,7 @@
       <Name>ExternalClassLibrary</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

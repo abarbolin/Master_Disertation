@@ -61,6 +61,26 @@ namespace SiteParse.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap info_64 {
+            get {
+                object obj = ResourceManager.GetObject("info_64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Формирование векторов произведено с ошибкой. Попробуйте еще раз.
+        /// </summary>
+        internal static string InfoForm_distanceBtn_Click_Формирование_векторов_произведено_с_ошибкой__Попробуйте_еще_раз {
+            get {
+                return ResourceManager.GetString("InfoForm_distanceBtn_Click_Формирование_векторов_произведено_с_ошибкой__Попробуйт" +
+                        "е_еще_раз", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Page is not available.
         /// </summary>
         internal static string ParseForm_GetHtml_Page_is_not_available {
@@ -93,6 +113,16 @@ namespace SiteParse.Properties {
         internal static string ParseForm_vectBtn_Click_vector_length_not_equal {
             get {
                 return ResourceManager.GetString("ParseForm_vectBtn_Click_vector_length_not_equal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Согласовать {
+            get {
+                object obj = ResourceManager.GetObject("Согласовать", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }
