@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SiteParse.Communication.SqlManager;
+using SiteParse.Methods;
 using SiteParse.Properties;
 
 namespace SiteParse
@@ -34,22 +35,7 @@ namespace SiteParse
             siteCompareLb2.DataSource = listSites2;
         }
 
-        /// <summary>
-        /// Евклидово расстояние между векторами
-        /// </summary>
-        /// <param name="vect1"></param>
-        /// <param name="vect2"></param>
-        /// <returns></returns>
-        static double EuclideanDistance(double[] vect1, double[] vect2)
-        {
-            var sumSquaredDiffs = 0.0;
-            for (int i = 0; i < vect1.Length; ++i)
-            {
-                sumSquaredDiffs += Math.Pow((vect1[i] - vect2[i]), 2);
-            }
-
-            return Math.Sqrt(sumSquaredDiffs);
-        }
+        
 
         
         private void distanceBtn_Click(object sender, EventArgs e)
@@ -73,7 +59,7 @@ namespace SiteParse
                     vectDouble2[i] = Convert.ToDouble(vect2[i]["freq"]);
                 }
 
-                var distance = EuclideanDistance(vectDouble1, vectDouble2);
+                var distance = DistanceMethods.EuclideanDistance(vectDouble1, vectDouble2);
                 distanceLbl.Text = distance.ToString();
             }
             else

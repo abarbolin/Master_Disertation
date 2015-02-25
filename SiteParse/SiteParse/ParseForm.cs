@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
 using SiteParse.Communication.SqlManager;
+using SiteParse.Model;
 using SiteParse.Properties;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
@@ -126,7 +127,7 @@ namespace SiteParse
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                errorLbl.Text = ex.Message;
                 return null;
             }
         }
@@ -178,7 +179,7 @@ namespace SiteParse
                 }
                 if (!String.IsNullOrEmpty(stringBlock.ToString()))
                 {
-                    findWordTB.AppendText(stringBlock + Environment.NewLine);
+                    //findWordTB.AppendText(stringBlock + Environment.NewLine);
                 }
             }
             return lemmaList;
@@ -281,6 +282,147 @@ namespace SiteParse
         {
             var form = new InfoForm();
             form.ShowDialog();
+        }
+
+        private void parseHistoryBtn_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the open file dialog box.
+            var openFileDialog1 = new OpenFileDialog
+            {
+                Filter = "Text Files (.txt)|*.txt|All Files (*.*)|*.*",
+                FilterIndex = 1
+            };
+
+            // Set filter options and filter index.
+
+
+            // Call the ShowDialog method to show the dialog box.
+            DialogResult userClickedOk = openFileDialog1.ShowDialog();
+
+            var listUrl = new List<string>();
+
+            // Process input if the user clicked OK.
+            if (userClickedOk.ToString() == "OK")
+            {
+                // Open the selected file to read.
+                System.IO.Stream fileStream = openFileDialog1.OpenFile();
+
+                using (var reader = new System.IO.StreamReader(fileStream))
+                {
+                    // Read the first line from the file and write it the textbox.
+                    string textHistory = reader.ReadToEnd();
+                    var stringArr = textHistory.Split('\n', '\r');
+                    var stringArrCount = stringArr.Count();
+                    for (int i = 1; i < stringArrCount; i++)
+                    {
+                        if (stringArr[i] != "")
+                        {
+                            listUrl.Add(stringArr[i].Split(',')[1]);
+                        }
+                    }
+                }
+                fileStream.Close();
+            }
+
+            var urlsCount = listUrl.Count();
+            for(int i = 2500; i<urlsCount; i++)
+            {
+                _textResult = new StringBuilder();
+                string url = listUrl[i];
+                countOfUrls.Text = i + "\\" + urlsCount;
+                Application.DoEvents();
+                if (SqlMethods.ExistsPage(url) == 0 && !url.Contains("vk.com") && !url.Contains("yandex.ru") && !url.Contains("google"))
+                {
+                    var htmlDoc = GetHtml(url);
+                    if (htmlDoc != null)
+                    {
+                        string pageText = GetTextFromPage(htmlDoc);
+                        var lemmaList = Lemmatizer(pageText);
+                        var frequencyDict = TermFrequencyMethod(lemmaList);
+
+                        var totalCount = frequencyDict.Count();
+
+
+                        var pageId = Convert.ToInt32(SqlMethods.AddPage(url, totalCount));
+
+                        foreach (var item in frequencyDict)
+                        {
+                            SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double) item.Value/totalCount));
+                        }
+
+                    }
+                }
+            }
+        }
+
+
+        public static List<PageModel> GetPageModelList(int pageCount)
+        {
+            var wordsFromPages = SqlMethods.GetWordsFromPages(pageCount);
+            var pagesIds = SqlMethods.GetPagesIds(pageCount);
+            int pagesReturnCount = pagesIds.Count();
+
+            var listPageModel = new List<PageModel>();
+            for (int i = 0; i < pagesReturnCount; i++)
+            {
+                var page = new PageModel { Id = Convert.ToInt32(pagesIds[i]["id"]), Vector = new Dictionary<string, float>() };
+                foreach (var wordFromPage in wordsFromPages)
+                {
+                    page.Vector[wordFromPage["word"]] = 0;
+                }
+                listPageModel.Add(page);
+            }
+
+            foreach (var pageModel in listPageModel)
+            {
+                var wordsFrequency = SqlMethods.GetWordsFrequency(pageModel.Id);
+                foreach (var wordFrequency in wordsFrequency)
+                {
+                    pageModel.Vector[wordFrequency["word"]] = Convert.ToSingle(wordFrequency["frequency"]);
+                }
+            }
+
+            return listPageModel;
+        }
+
+
+        public static List<int> GetRandomIndexes(int clusterCount, List<PageModel> pages)
+        {
+            var r = new Random();
+            var indexes = new List<int>();
+
+            while (indexes.Count < clusterCount)
+            {
+                var index = r.Next(0, pages.Count);
+
+                if (!indexes.Contains(index))
+                {
+                    indexes.Add(index);
+                }
+            }
+
+            return indexes;
+        }
+
+        public static List<ClusterModel> InitializeClusters(int clusterCount, List<PageModel> pages)
+        {
+            var indexes = GetRandomIndexes(clusterCount, pages);
+
+            var clusters = new List<ClusterModel>();
+
+            foreach (var index in indexes)
+            {
+                var clusterModel = new ClusterModel() {PageList = new List<PageModel>()};
+                clusterModel.AddPage(pages[index]);
+                clusters.Add(clusterModel);
+            }
+
+            return clusters;
+        }
+
+        private void testClusterBtn_Click(object sender, EventArgs e)
+        {
+            var initClusters = InitializeClusters(3, GetPageModelList(10));
         }
 
 

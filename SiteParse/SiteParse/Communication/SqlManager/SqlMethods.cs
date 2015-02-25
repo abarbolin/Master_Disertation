@@ -10,6 +10,23 @@ namespace SiteParse.Communication.SqlManager
 {
     public class SqlMethods : SqlMethodsBase
     {
+        public static List<Dictionary<string, string>> GetWordsFrequency(int pageId)
+        {
+            return SQL(@"SELECT w.word, w.frequency FROM Words w
+                        WHERE w.id_page = @0", pageId.ToString());
+        }
+
+        public static List<Dictionary<string, string>> GetWordsFromPages(int pageCount)
+        {
+            return SQL(@"SELECT w.word FROM Words w 
+                        WHERE id_page IN (SELECT TOP " + pageCount + @" p.id FROM Pages p)
+                        GROUP BY w.word");
+        }
+
+        public static List<Dictionary<string, string>> GetPagesIds(int pageCount)
+        {
+            return SQL(@"SELECT TOP " + pageCount + @" id FROM Pages");
+        }
 
         public static List<Dictionary<string, string>> GetSites()
         {

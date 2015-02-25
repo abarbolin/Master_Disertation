@@ -41,6 +41,9 @@
             this.waitLBL = new System.Windows.Forms.Label();
             this.errorLbl = new System.Windows.Forms.Label();
             this.infoButton = new System.Windows.Forms.Button();
+            this.parseHistoryBtn = new System.Windows.Forms.Button();
+            this.countOfUrls = new System.Windows.Forms.Label();
+            this.testClusterBtn = new System.Windows.Forms.Button();
             this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -151,12 +154,12 @@
             // errorLbl
             // 
             this.errorLbl.AutoSize = true;
-            this.errorLbl.Font = new System.Drawing.Font("Wasco Sans", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.errorLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errorLbl.ForeColor = System.Drawing.Color.Red;
             this.errorLbl.Location = new System.Drawing.Point(746, 17);
             this.errorLbl.MaximumSize = new System.Drawing.Size(300, 50);
             this.errorLbl.Name = "errorLbl";
-            this.errorLbl.Size = new System.Drawing.Size(58, 20);
+            this.errorLbl.Size = new System.Drawing.Size(57, 20);
             this.errorLbl.TabIndex = 10;
             this.errorLbl.Text = "label1";
             // 
@@ -170,11 +173,42 @@
             this.infoButton.UseVisualStyleBackColor = true;
             this.infoButton.Click += new System.EventHandler(this.infoButton_Click);
             // 
+            // parseHistoryBtn
+            // 
+            this.parseHistoryBtn.Location = new System.Drawing.Point(9, 91);
+            this.parseHistoryBtn.Name = "parseHistoryBtn";
+            this.parseHistoryBtn.Size = new System.Drawing.Size(56, 23);
+            this.parseHistoryBtn.TabIndex = 13;
+            this.parseHistoryBtn.Text = "History";
+            this.parseHistoryBtn.UseVisualStyleBackColor = true;
+            this.parseHistoryBtn.Click += new System.EventHandler(this.parseHistoryBtn_Click);
+            // 
+            // countOfUrls
+            // 
+            this.countOfUrls.AutoSize = true;
+            this.countOfUrls.Location = new System.Drawing.Point(12, 130);
+            this.countOfUrls.Name = "countOfUrls";
+            this.countOfUrls.Size = new System.Drawing.Size(0, 13);
+            this.countOfUrls.TabIndex = 14;
+            // 
+            // testClusterBtn
+            // 
+            this.testClusterBtn.Location = new System.Drawing.Point(9, 125);
+            this.testClusterBtn.Name = "testClusterBtn";
+            this.testClusterBtn.Size = new System.Drawing.Size(56, 23);
+            this.testClusterBtn.TabIndex = 15;
+            this.testClusterBtn.Text = "Test";
+            this.testClusterBtn.UseVisualStyleBackColor = true;
+            this.testClusterBtn.Click += new System.EventHandler(this.testClusterBtn_Click);
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.testClusterBtn);
+            this.Controls.Add(this.countOfUrls);
+            this.Controls.Add(this.parseHistoryBtn);
             this.Controls.Add(this.infoButton);
             this.Controls.Add(this.errorLbl);
             this.Controls.Add(this.waitingPanel);
@@ -212,6 +246,9 @@
         private System.Windows.Forms.Label waitLBL;
         private System.Windows.Forms.Label errorLbl;
         private System.Windows.Forms.Button infoButton;
+        private System.Windows.Forms.Button parseHistoryBtn;
+        private System.Windows.Forms.Label countOfUrls;
+        private System.Windows.Forms.Button testClusterBtn;
     }
 }
 
