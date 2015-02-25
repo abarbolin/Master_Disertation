@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
 using SiteParse.Communication.SqlManager;
+using SiteParse.Methods;
 using SiteParse.Model;
 using SiteParse.Properties;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
@@ -355,16 +356,23 @@ namespace SiteParse
             }
         }
 
-
+        /// <summary>
+        /// Получаем список страниц, их id и вектора
+        /// </summary>
+        /// <param name="pageCount"></param>
+        /// <returns></returns>
         public static List<PageModel> GetPageModelList(int pageCount)
         {
+            // Получаем словарь со всех страниц
             var wordsFromPages = SqlMethods.GetWordsFromPages(pageCount);
+            // Id веб страниц
             var pagesIds = SqlMethods.GetPagesIds(pageCount);
             int pagesReturnCount = pagesIds.Count();
 
             var listPageModel = new List<PageModel>();
             for (int i = 0; i < pagesReturnCount; i++)
             {
+                // Инициализируем вектор текущей страницы, забивая его нулями
                 var page = new PageModel { Id = Convert.ToInt32(pagesIds[i]["id"]), Vector = new Dictionary<string, float>() };
                 foreach (var wordFromPage in wordsFromPages)
                 {
@@ -373,6 +381,7 @@ namespace SiteParse
                 listPageModel.Add(page);
             }
 
+            // Забиваем вектор страницы значениями частоты
             foreach (var pageModel in listPageModel)
             {
                 var wordsFrequency = SqlMethods.GetWordsFrequency(pageModel.Id);
@@ -385,7 +394,12 @@ namespace SiteParse
             return listPageModel;
         }
 
-
+        /// <summary>
+        /// Получаем список рандомных индексов
+        /// </summary>
+        /// <param name="clusterCount"></param>
+        /// <param name="pages"></param>
+        /// <returns></returns>
         public static List<int> GetRandomIndexes(int clusterCount, List<PageModel> pages)
         {
             var r = new Random();
@@ -404,6 +418,12 @@ namespace SiteParse
             return indexes;
         }
 
+        /// <summary>
+        /// Инициализация начального состояния кластеров, с рандомным выбором страниц как центроидов кластеров
+        /// </summary>
+        /// <param name="clusterCount"></param>
+        /// <param name="pages"></param>
+        /// <returns></returns>
         public static List<ClusterModel> InitializeClusters(int clusterCount, List<PageModel> pages)
         {
             var indexes = GetRandomIndexes(clusterCount, pages);
@@ -414,15 +434,119 @@ namespace SiteParse
             {
                 var clusterModel = new ClusterModel() {PageList = new List<PageModel>()};
                 clusterModel.AddPage(pages[index]);
+                clusterModel.CalculateCentroidVector();
                 clusters.Add(clusterModel);
             }
 
             return clusters;
         }
 
+        /// <summary>
+        /// Сравнение двух массивов
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="a1"></param>
+        /// <param name="a2"></param>
+        /// <returns></returns>
+        static bool ArraysEqual<T>(T[] a1, T[] a2)
+        {
+            if (ReferenceEquals(a1, a2))
+                return true;
+
+            if (a1 == null || a2 == null)
+                return false;
+
+            if (a1.Length != a2.Length)
+                return false;
+
+            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
+            for (int i = 0; i < a1.Length; i++)
+            {
+                if (!comparer.Equals(a1[i], a2[i])) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Алгоритм kmeans
+        /// </summary>
+        /// <param name="initClusters">Первоначальное состояние кластеров, с рандомно выбранными центроидами</param>
+        /// <param name="pages">Страницы, которые нужно распихать по кластерам</param>
+        /// <returns></returns>
+        public static List<ClusterModel> KMeans(List<ClusterModel> initClusters, List<PageModel> pages)
+        {
+            // Флаг сходимости
+            bool stopingCriteria = false;
+            // Получаем количество кластеров
+            var clustersCount = initClusters.Count;
+
+            // В цикле, пока метод не сойдется
+            while (stopingCriteria == false)
+            {
+                // Сохраняем первоначальное состояние векторов центроидов кластера
+                List<float[]> prevStateCentroidVectors = new List<float[]>();
+                foreach (var clusterModel in initClusters)
+                {
+                    prevStateCentroidVectors.Add(clusterModel.CentroidVector.Values.ToArray());
+                    clusterModel.PageList = new List<PageModel>();
+                }
+
+                // Бежим по всем страницами
+                foreach (var page in pages)
+                {
+                    // Вектор текущей страницы
+                    float[] pageVector = page.Vector.Values.ToArray();
+                    // Находим максимальное значение, которое будем соотвествовать самому близкому центроиду
+                    float maxValue = 0;
+                    // Индекс центроида
+                    int index = 0;
+                    for (int i = 0; i < clustersCount; i++)
+                    {
+                        // Вектор текущего центроида
+                        float[] centroidVector = initClusters[i].CentroidVector.Values.ToArray();
+                        // Рассчитываем Cosine Similarity, чем оно больше, тем конкретная страница ближе к центроиду
+                        var distance = DistanceMethods.FindCosineSimilarity(pageVector, centroidVector);
+                        if (distance > maxValue)
+                        {
+                            index = i;
+                            maxValue = distance;
+                        }
+                    }
+                    // Запихиваем страницу в кластер, к центроиду которого, она оказалась ближе
+                    initClusters[index].AddPage(page);
+                }
+
+                // Рассчитываем новые центроиды кластеров
+                foreach (var clusterModel in initClusters)
+                {
+                    clusterModel.CalculateCentroidVector();
+                }
+
+                // Если какой либо из векторов центроидов не совпадает с предыдущим состоянием, то
+                // Проходим алгоритм еще раз
+                stopingCriteria = true;
+                for (int i = 0; i < prevStateCentroidVectors.Count; i++)
+                {
+                    if (!ArraysEqual(prevStateCentroidVectors[i], initClusters[i].CentroidVector.Values.ToArray()))
+                    {
+                        stopingCriteria = false;
+                    }
+                }
+            }
+
+            return initClusters;
+        }
+
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
-            var initClusters = InitializeClusters(3, GetPageModelList(10));
+            // Получаем первые n страниц
+            var pages = GetPageModelList(50);
+            // Количество кластеров
+            const int clusterCount = 3;
+            // Инициализируем кластеры, выбирая рандомно clusterCount страниц, как центроиды кластеров
+            var initClusters = InitializeClusters(clusterCount, pages);
+            // Применяем алгоритм kmeans
+            KMeans(initClusters, pages);
         }
 
 

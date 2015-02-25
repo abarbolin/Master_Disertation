@@ -18,6 +18,11 @@ namespace SiteParse.Model
         public void AddPage(PageModel page)
         {
             _pageList.Add(page);
+        }
+
+        public void CalculateCentroidVector()
+        {
+            CentroidVector = new Dictionary<string, float>();
 
             if (_pageList.Count == 1)
             {
@@ -25,7 +30,7 @@ namespace SiteParse.Model
             }
             else
             {
-                var vectorKeys = _pageList.First().Vector.Keys;
+                var vectorKeys = _pageList.First().Vector.Keys.ToList();
                 foreach (var vectorKey in vectorKeys)
                 {
                     float total = 0;
@@ -33,7 +38,7 @@ namespace SiteParse.Model
                     {
                         total += pageModel.Vector[vectorKey];
                     }
-                    CentroidVector[vectorKey] = total/_pageList.Count();
+                    CentroidVector[vectorKey] = total / _pageList.Count();
                 }
             }
         }
@@ -44,7 +49,6 @@ namespace SiteParse.Model
             set
             {
                 _pageList = value;
-                CentroidVector = new Dictionary<string, float>();
             }
         }
 
