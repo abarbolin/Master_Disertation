@@ -195,6 +195,11 @@ namespace SiteParse
         }
 
 
+        /// <summary>
+        /// Получаем матрицу расстояний между страницами
+        /// </summary>
+        /// <param name="pages"></param>
+        /// <returns></returns>
         public static float[][] GetArrayOfMeasure(List<PageModel> pages)
         {
             int pagesCount = pages.Count;
@@ -202,6 +207,8 @@ namespace SiteParse
 
             for (int i = 0; i < pagesCount; i++)
             {
+                // Для каждой страницы заводим свой отдельный айди
+                // Который будет идентифицировать страницу внутри матрицы расстояний
                 pages[i].ArrayMessureId = i;
 
                 array[i] = new float[pagesCount];
@@ -210,10 +217,13 @@ namespace SiteParse
                 {
                     if (i == k)
                     {
+                        // Для диагонали выставляем расстояние 0
+                        // Страница сама с собой
                         array[i][k] = 0;
                     }
                     else
                     {
+                        // Добавляем расстояние
                         array[i][k] = DistanceMethods.FindCosineSimilarity(pages[i].Vector.Values.ToArray(),
                             pages[k].Vector.Values.ToArray());
                     }
@@ -223,14 +233,26 @@ namespace SiteParse
             return array;
         }
 
+        /// <summary>
+        /// Получаем максимальное расстояние
+        /// При cosine similarity максимальное расстояние достигается при меньшем значении
+        /// 1 - полностью совпадают, 0 - вообще не совпали (находятся далеко друг от друга)
+        /// </summary>
+        /// <param name="arrayOfMeasure"></param>
+        /// <param name="ids"></param>
+        /// <returns></returns>
         public static MaxArrayOfMeasureModel GetMaxFromArrayMeasure(float[][] arrayOfMeasure, List<int> ids)
         {
             var measureModel = new MaxArrayOfMeasureModel();
+            // Наша мера расстояния находится в диапазоне от 0 до 1
+            // Ищем минимальное значение, которое будет давать нам в итоге
+            // Самое большое расстояние между страницами
             float max = 2;
             foreach (var id in ids)
             {
                 foreach (var i in ids)
                 {
+                    // Если значение меньше, значит расстояние больше и учитываем, что страница не сама на себя id==i (диагональ матрицы расстояний)
                     if (arrayOfMeasure[id][i] < max && id!=i)
                     {
                         measureModel.FirstPageId = id;
@@ -243,6 +265,11 @@ namespace SiteParse
             return measureModel;
         }
 
+        /// <summary>
+        /// Получаем максимальный id в списке кластеров
+        /// </summary>
+        /// <param name="clusters"></param>
+        /// <returns></returns>
         public static int GetMaxClusterId(List<ClusterModel> clusters)
         {
             if (clusters.Count == 0)
@@ -252,31 +279,41 @@ namespace SiteParse
             return clusters.Max(c => c.Id);
         }
 
-
-        public static List<ClusterModel> DivisiveMethod(List<PageModel> pages)
+        /// <summary>
+        /// Делим один из кластеров, в котором нашли максимально удаленные друг от друга страницы
+        /// на пополам и распихиваем страницы в зависимости от того к какому кластеру они ближе оказались
+        /// </summary>
+        /// <param name="clusters"></param>
+        /// <param name="pages"></param>
+        /// <param name="arrayOfMeasure"></param>
+        /// <returns></returns>
+        public static List<ClusterModel> SplitClusters(List<ClusterModel> clusters, List<PageModel> pages, float[][] arrayOfMeasure)
         {
-            var clusters = new List<ClusterModel>();
-
-            var arrayOfMeasure = GetArrayOfMeasure(pages);
-
-            var initCluster = new ClusterModel() {Id = 1};
-            foreach (var page in pages)
-            {
-                initCluster.PageList.Add(page);
-            }
-            clusters.Add(initCluster);
-
+            // Бежим по всем кластерам
             foreach (var cluster in clusters)
             {
+                // Индексы для поиска в матрице расстояний
                 var pagesIdList = new List<int>();
                 foreach (var page in cluster.PageList)
                 {
                     pagesIdList.Add(page.ArrayMessureId);
                 }
 
-                cluster.MaxMeasure = GetMaxFromArrayMeasure(arrayOfMeasure, pagesIdList);
+                // Если количество страниц в кластере больше 1, то находим максимальное расстояние
+                // Между страницами. Если количество 1, то делить нечего уже
+                if (cluster.PageList.Count > 1)
+                {
+                    cluster.MaxMeasure = GetMaxFromArrayMeasure(arrayOfMeasure, pagesIdList);
+                }
+                else
+                {
+                    cluster.MaxMeasure = new MaxArrayOfMeasureModel{Max=2};
+                }
             }
 
+            // Значение меры от 0 до 1, поэтому при поиске значений вытсавляем 2,
+            // Чтобы найти минимальное значение, которое будет соответствовать
+            // Наибольшему расстоянию между страницами
             float tempMaxMeasure = 2;
             int splitClusterId = 0;
 
@@ -289,40 +326,85 @@ namespace SiteParse
                 }
             }
 
-            var splitCluster = clusters.FirstOrDefault(c => c.Id == splitClusterId);
-            var firstPageMeasureId = splitCluster.MaxMeasure.FirstPageId;
-            var secondPageMeasureId = splitCluster.MaxMeasure.SecondPageId;
-            var pageList = splitCluster.PageList;
-            clusters.Remove(splitCluster);
-
-            var firstCluster = new ClusterModel {Id = GetMaxClusterId(clusters) + 1};
-            var firstClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == firstPageMeasureId);
-            firstCluster.AddPage(firstClusterCentroid);
-            clusters.Add(firstCluster);
-
-            var secondCluster = new ClusterModel { Id = GetMaxClusterId(clusters) + 1 };
-            var secondClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == secondPageMeasureId);
-            secondCluster.AddPage(secondClusterCentroid);
-            clusters.Add(secondCluster);
-
-            foreach (var page in pageList)
+            // Если в итоге мы не нашли тот кластер, который будем делить, то просто возвращаем старый набор кластеров
+            if (tempMaxMeasure < 2)
             {
-                if (page.ArrayMessureId == firstPageMeasureId || page.ArrayMessureId == secondPageMeasureId)
-                {
-                    continue;
-                }
+                // Достаем тот кластер, который будем делить
+                var splitCluster = clusters.FirstOrDefault(c => c.Id == splitClusterId);
+                // Идентификаторы страниц, между которыми наибольшее расстояние внутри кластера
+                var firstPageMeasureId = splitCluster.MaxMeasure.FirstPageId;
+                var secondPageMeasureId = splitCluster.MaxMeasure.SecondPageId;
+                // Сохраняем список страниц, который затем будем раскидывать между кластерами
+                var pageList = splitCluster.PageList;
+                // Удаляем кластер из списка
+                clusters.Remove(splitCluster);
 
-                if (arrayOfMeasure[firstPageMeasureId][page.ArrayMessureId] >
-                    arrayOfMeasure[secondPageMeasureId][page.ArrayMessureId])
+                // Инициализируем два новых кластера
+                // Закидываем в качестве центроидов те страницы, между которыми было наибольшее расстояние
+                var firstCluster = new ClusterModel {Id = GetMaxClusterId(clusters) + 1};
+                var firstClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == firstPageMeasureId);
+                firstCluster.AddPage(firstClusterCentroid);
+                clusters.Add(firstCluster);
+
+                var secondCluster = new ClusterModel {Id = GetMaxClusterId(clusters) + 1};
+                var secondClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == secondPageMeasureId);
+                secondCluster.AddPage(secondClusterCentroid);
+                clusters.Add(secondCluster);
+
+                // Расскидываем страницы между двумя новыми кластерами
+                foreach (var page in pageList)
                 {
-                    firstCluster.AddPage(page);
-                }
-                else
-                {
-                    secondCluster.AddPage(page);
+                    // Если это наши центроиды, то пропускаем
+                    if (page.ArrayMessureId == firstPageMeasureId || page.ArrayMessureId == secondPageMeasureId)
+                    {
+                        continue;
+                    }
+
+                    // Чем больше мера, тем ближе страница до кластера
+                    if (arrayOfMeasure[firstPageMeasureId][page.ArrayMessureId] >
+                        arrayOfMeasure[secondPageMeasureId][page.ArrayMessureId])
+                    {
+                        firstCluster.AddPage(page);
+                    }
+                    else
+                    {
+                        secondCluster.AddPage(page);
+                    }
                 }
             }
 
+            return clusters;
+        }
+
+        /// <summary>
+        /// Дивизимный метод кластерного анализа
+        /// </summary>
+        /// <param name="pages">Список страниц</param>
+        /// <returns></returns>
+        public static List<ClusterModel> DivisiveMethod(List<PageModel> pages)
+        {
+            // Инициализируем список кластеров
+            var clusters = new List<ClusterModel>();
+
+            // Получаем матрицу расстояний
+            var arrayOfMeasure = GetArrayOfMeasure(pages);
+
+            // Создаем первый кластер, в который будут входить все страницы
+            var initCluster = new ClusterModel() {Id = 1};
+            foreach (var page in pages)
+            {
+                initCluster.PageList.Add(page);
+            }
+            clusters.Add(initCluster);
+
+            // ToDo: Добавить критерий остановки
+            int i = 0;
+            while (i < 30)
+            {
+                SplitClusters(clusters, pages, arrayOfMeasure);
+                i++;
+            }
+            var s = clusters.Where(c => c.PageList.Count > 2);
             return clusters;
         }
 
