@@ -194,13 +194,44 @@ namespace SiteParse
             }
         }
 
-        
-        
+
+        public static float[][] GetArrayOfMessure(List<PageModel> pages)
+        {
+            int pagesCount = pages.Count;
+            var array = new float[pagesCount][];
+
+            for (int i = 0; i < pagesCount; i++)
+            {
+                array[i] = new float[pagesCount];
+
+                for (int k = 0; k < pagesCount; k++)
+                {
+                    if (i == k)
+                    {
+                        array[i][k] = 0;
+                    }
+                    else
+                    {
+                        array[i][k] = DistanceMethods.FindCosineSimilarity(pages[i].Vector.Values.ToArray(),
+                            pages[k].Vector.Values.ToArray());
+                    }
+                }
+            }
+
+            return array;
+        }
 
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
+            
+
+
             // Получаем первые n страниц
             var pages = PageMethods.GetPageModelList(50);
+
+            var s = GetArrayOfMessure(pages);
+
+
             // Количество кластеров
             const int clusterCount = 3;
             // Инициализируем кластеры, выбирая рандомно clusterCount страниц, как центроиды кластеров
