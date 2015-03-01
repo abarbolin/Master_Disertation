@@ -195,13 +195,15 @@ namespace SiteParse
         }
 
 
-        public static float[][] GetArrayOfMessure(List<PageModel> pages)
+        public static float[][] GetArrayOfMeasure(List<PageModel> pages)
         {
             int pagesCount = pages.Count;
             var array = new float[pagesCount][];
 
             for (int i = 0; i < pagesCount; i++)
             {
+                pages[i].ArrayMessureId = i;
+
                 array[i] = new float[pagesCount];
 
                 for (int k = 0; k < pagesCount; k++)
@@ -221,16 +223,116 @@ namespace SiteParse
             return array;
         }
 
+        public static MaxArrayOfMeasureModel GetMaxFromArrayMeasure(float[][] arrayOfMeasure, List<int> ids)
+        {
+            var measureModel = new MaxArrayOfMeasureModel();
+            float max = 2;
+            foreach (var id in ids)
+            {
+                foreach (var i in ids)
+                {
+                    if (arrayOfMeasure[id][i] < max && id!=i)
+                    {
+                        measureModel.FirstPageId = id;
+                        measureModel.SecondPageId = i;
+                        max = arrayOfMeasure[id][i];
+                        measureModel.Max = max;
+                    }
+                }
+            }
+            return measureModel;
+        }
+
+        public static int GetMaxClusterId(List<ClusterModel> clusters)
+        {
+            if (clusters.Count == 0)
+            {
+                return 0;
+            }
+            return clusters.Max(c => c.Id);
+        }
+
+
+        public static List<ClusterModel> DivisiveMethod(List<PageModel> pages)
+        {
+            var clusters = new List<ClusterModel>();
+
+            var arrayOfMeasure = GetArrayOfMeasure(pages);
+
+            var initCluster = new ClusterModel() {Id = 1};
+            foreach (var page in pages)
+            {
+                initCluster.PageList.Add(page);
+            }
+            clusters.Add(initCluster);
+
+            foreach (var cluster in clusters)
+            {
+                var pagesIdList = new List<int>();
+                foreach (var page in cluster.PageList)
+                {
+                    pagesIdList.Add(page.ArrayMessureId);
+                }
+
+                cluster.MaxMeasure = GetMaxFromArrayMeasure(arrayOfMeasure, pagesIdList);
+            }
+
+            float tempMaxMeasure = 2;
+            int splitClusterId = 0;
+
+            foreach (var cluster in clusters)
+            {
+                if (cluster.MaxMeasure.Max < tempMaxMeasure)
+                {
+                    tempMaxMeasure = cluster.MaxMeasure.Max;
+                    splitClusterId = cluster.Id;
+                }
+            }
+
+            var splitCluster = clusters.FirstOrDefault(c => c.Id == splitClusterId);
+            var firstPageMeasureId = splitCluster.MaxMeasure.FirstPageId;
+            var secondPageMeasureId = splitCluster.MaxMeasure.SecondPageId;
+            var pageList = splitCluster.PageList;
+            clusters.Remove(splitCluster);
+
+            var firstCluster = new ClusterModel {Id = GetMaxClusterId(clusters) + 1};
+            var firstClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == firstPageMeasureId);
+            firstCluster.AddPage(firstClusterCentroid);
+            clusters.Add(firstCluster);
+
+            var secondCluster = new ClusterModel { Id = GetMaxClusterId(clusters) + 1 };
+            var secondClusterCentroid = pages.FirstOrDefault(p => p.ArrayMessureId == secondPageMeasureId);
+            secondCluster.AddPage(secondClusterCentroid);
+            clusters.Add(secondCluster);
+
+            foreach (var page in pageList)
+            {
+                if (page.ArrayMessureId == firstPageMeasureId || page.ArrayMessureId == secondPageMeasureId)
+                {
+                    continue;
+                }
+
+                if (arrayOfMeasure[firstPageMeasureId][page.ArrayMessureId] >
+                    arrayOfMeasure[secondPageMeasureId][page.ArrayMessureId])
+                {
+                    firstCluster.AddPage(page);
+                }
+                else
+                {
+                    secondCluster.AddPage(page);
+                }
+            }
+
+            return clusters;
+        }
+
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
-            
-
-
             // Получаем первые n страниц
             var pages = PageMethods.GetPageModelList(50);
 
-            var s = GetArrayOfMessure(pages);
 
+            var s = DivisiveMethod(pages);
 
             // Количество кластеров
             const int clusterCount = 3;

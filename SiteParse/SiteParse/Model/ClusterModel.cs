@@ -52,6 +52,10 @@ namespace SiteParse.Model
             }
         }
 
-        public Dictionary<string, float> CentroidVector { get; set; } 
+        public Dictionary<string, float> CentroidVector { get; set; }
+
+        public MaxArrayOfMeasureModel MaxMeasure { get; set; }
+
+        public int Id { get; set; }
     }
 }

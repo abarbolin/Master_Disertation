@@ -67,6 +67,7 @@
     <Compile Include="Methods\Helpers.cs" />
     <Compile Include="Methods\PageMethods.cs" />
     <Compile Include="Model\ClusterModel.cs" />
+    <Compile Include="Model\MaxArrayOfMeasureModel.cs" />
     <Compile Include="Model\PageModel.cs" />
     <Compile Include="ParseForm.cs">
       <SubType>Form</SubType>
