@@ -61,7 +61,11 @@
     <Compile Include="InfoForm.Designer.cs">
       <DependentUpon>InfoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Methods\ClusterizationMethods.cs" />
+    <Compile Include="Methods\ClusterMethods.cs" />
     <Compile Include="Methods\DistanceMethods.cs" />
+    <Compile Include="Methods\Helpers.cs" />
+    <Compile Include="Methods\PageMethods.cs" />
     <Compile Include="Model\ClusterModel.cs" />
     <Compile Include="Model\PageModel.cs" />
     <Compile Include="ParseForm.cs">

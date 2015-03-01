@@ -42,6 +42,7 @@ namespace SiteParse.Methods
 
         #endregion
 
+        // Основной показатель того, на какой угол отклоняются векторы друг от друга
         public static float DotProduct(float[] vecA, float[] vecB)
         {
 

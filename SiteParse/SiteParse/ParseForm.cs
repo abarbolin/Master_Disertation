@@ -76,7 +76,7 @@ namespace SiteParse
                     string pageText = GetTextFromPage(htmlDoc);
                     ParseBox.Text = pageText;
                     var lemmaList = Lemmatizer(pageText);
-                    var frequencyDict = TermFrequencyMethod(lemmaList);
+                    var frequencyDict = Helpers.TermFrequencyMethod(lemmaList);
 
                     var totalCount = frequencyDict.Count();
 
@@ -102,160 +102,7 @@ namespace SiteParse
                 waitingPanel.Visible = false;
             }
         }
-        /// <summary>
-        /// Получаем Html-код страницы
-        /// </summary>
-        /// <param name="url">Ссылка на ресурс</param>
-        private HtmlDocument GetHtml(string url)
-        {
-            try
-            {
-                var http = new HttpClient();
-                var response = http.GetByteArrayAsync(url);
-               /* var response = await http.GetByteArrayAsync(url);*/
-                if (response.Result != null)
-                {
-                    var source = Encoding.GetEncoding(GetEncoding(url))
-                        .GetString(response.Result, 0, response.Result.Length - 1);
-                    source = WebUtility.HtmlDecode(source);
-
-                    var parseDoc = new HtmlDocument();
-                    parseDoc.LoadHtml(source);
-                    return parseDoc;
-                }
-                errorLbl.Text=Resources.ParseForm_GetHtml_Page_is_not_available;
-                return null;
-            }
-            catch (Exception ex)
-            {
-                errorLbl.Text = ex.Message;
-                return null;
-            }
-        }
-        /// <summary>
-        /// Получаем кодировку страницы
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        private static string GetEncoding(string url)
-        {
-            var req = WebRequest.Create(url);
-            var contentHeader = req.GetResponse().ContentType;
-            var contentArr = contentHeader.Split(';');
-            return contentArr.Length > 1 ? contentArr[1].Replace("charset=", "").Trim() : "utf-8";
-        }
-        /// <summary>
-        /// Процедура лемматизации слова
-        /// </summary>
-        /// <param name="text"></param>
-        public List<string> Lemmatizer(String text)
-        {
-            //  ' ',
-            var stringArr = text.Split('\n', '\r');
-            stringArr = stringArr.Where(item => item != String.Empty).ToArray();
-            var lemmaList = new List<string>();
-            ILemmatizer lemmatizerRu = new LemmatizerRussian();
-            lemmatizerRu.LoadDictionariesRegistry();
-            foreach (var block in stringArr)
-            {
-                var blockSplit = block.Split(' ');
-                var stringBlock = new StringBuilder();
-                foreach (
-                    var piParadigmCollection in
-                        blockSplit.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0))
-                            .Where(piParadigmCollection => piParadigmCollection.Count > 0))
-                {
-                    for (var j = 0; j < 1; j++)
-                    {
-                        object[] args = {j};
-                        var paradigmCollectionType = piParadigmCollection.GetType();
-                        var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null,
-                            piParadigmCollection, args);
-                        var itemType = item.GetType();
-                        var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
-                        if (lemma.ToString().Length < MinLength) continue;
-                        stringBlock.Append(lemma + " ");
-                        lemmaList.Add(lemma.ToString());
-                    }
-                }
-                if (!String.IsNullOrEmpty(stringBlock.ToString()))
-                {
-                    //findWordTB.AppendText(stringBlock + Environment.NewLine);
-                }
-            }
-            return lemmaList;
-        }
-
-        private static void LoadTagToList()
-        {
-            _listOfTags.Clear();
-            _tags = SqlMethods.GetTags();
-            foreach (var tag in _tags)
-            {
-                _listOfTags.Add(tag["name"]);
-            }
-        }
-        /// <summary>
-        /// Получаем верхние тэги страницы
-        /// </summary>
-        /// <param name="parseDoc">Html документ подверженный парсингу</param>
-        /// <returns></returns>
-        private string GetTextFromPage(HtmlDocument parseDoc)
-        {
-            var nodes = parseDoc.DocumentNode.Descendants();
-
-            foreach (var tag in _tags)
-            {
-                var currentNodes = nodes.Where(t => t.Name == tag["name"]);
-                foreach (var currentNode in currentNodes.Where(t => t.ParentNode.Name == "body"))
-                {
-                    GetText(currentNode);
-                }
-            }
-            
-            return _textResult.ToString();
-        }
-        /// <summary>
-        /// Достаём текст
-        /// </summary>
-        /// <param name="curNode">Текущая ветка</param>
-        private static void GetText(HtmlNode curNode)
-        {
-            foreach (var childNode in curNode.ChildNodes)
-            {
-                if (childNode.Name == "#text" && _listOfTags.Contains(childNode.ParentNode.Name))
-                {
-                    var text = childNode.InnerHtml;
-                    if (text.Contains("<!--") || text.Contains("</")) continue;
-                    text = ClearSpecialChars(text);
-                    text = text.Replace("\n", String.Empty).Trim();
-                    if (text != String.Empty)
-                    {
-                        _textResult.AppendLine(text);
-                    }
-                }
-                else
-                {
-                    GetText(childNode);
-                }
-            }
-        }
-        /// <summary>
-        /// Удаляем спецсимволы из вытащенного текст
-        /// </summary>
-        /// <param name="text">Текст</param>
-        /// <returns>Текст без спецсимволов</returns>
-        public static string ClearSpecialChars(string text)
-        {
-            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch) && ch != ' ').ToList();
-
-            foreach (var specialChar in specialChars)
-            {
-                return text.Replace(specialChar.ToString(CultureInfo.InvariantCulture), String.Empty);
-            }
-
-            return text;
-        }
+        
         /// <summary>
         /// По нажатию Ctrl+A выделяем  текст и копируем в буфер обмена
         /// </summary>
@@ -267,16 +114,7 @@ namespace SiteParse
             ParseBox.SelectAll();
             Clipboard.SetText(ParseBox.Text);
         }
-        /// <summary>
-        /// Метод поиска частоты слова
-        /// </summary>
-        /// <param name="lemmaList"></param>
-        private IOrderedEnumerable<KeyValuePair<string, int>> TermFrequencyMethod(IEnumerable<string> lemmaList)
-        {
-            var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
-            IOrderedEnumerable<KeyValuePair<string, int>> sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
-            return sortedDict;
-        }
+        
         
 
         private void infoButton_Click(object sender, EventArgs e)
@@ -339,7 +177,7 @@ namespace SiteParse
                     {
                         string pageText = GetTextFromPage(htmlDoc);
                         var lemmaList = Lemmatizer(pageText);
-                        var frequencyDict = TermFrequencyMethod(lemmaList);
+                        var frequencyDict = Helpers.TermFrequencyMethod(lemmaList);
 
                         var totalCount = frequencyDict.Count();
 
@@ -356,199 +194,183 @@ namespace SiteParse
             }
         }
 
-        /// <summary>
-        /// Получаем список страниц, их id и вектора
-        /// </summary>
-        /// <param name="pageCount"></param>
-        /// <returns></returns>
-        public static List<PageModel> GetPageModelList(int pageCount)
-        {
-            // Получаем словарь со всех страниц
-            var wordsFromPages = SqlMethods.GetWordsFromPages(pageCount);
-            // Id веб страниц
-            var pagesIds = SqlMethods.GetPagesIds(pageCount);
-            int pagesReturnCount = pagesIds.Count();
-
-            var listPageModel = new List<PageModel>();
-            for (int i = 0; i < pagesReturnCount; i++)
-            {
-                // Инициализируем вектор текущей страницы, забивая его нулями
-                var page = new PageModel { Id = Convert.ToInt32(pagesIds[i]["id"]), Vector = new Dictionary<string, float>() };
-                foreach (var wordFromPage in wordsFromPages)
-                {
-                    page.Vector[wordFromPage["word"]] = 0;
-                }
-                listPageModel.Add(page);
-            }
-
-            // Забиваем вектор страницы значениями частоты
-            foreach (var pageModel in listPageModel)
-            {
-                var wordsFrequency = SqlMethods.GetWordsFrequency(pageModel.Id);
-                foreach (var wordFrequency in wordsFrequency)
-                {
-                    pageModel.Vector[wordFrequency["word"]] = Convert.ToSingle(wordFrequency["frequency"]);
-                }
-            }
-
-            return listPageModel;
-        }
-
-        /// <summary>
-        /// Получаем список рандомных индексов
-        /// </summary>
-        /// <param name="clusterCount"></param>
-        /// <param name="pages"></param>
-        /// <returns></returns>
-        public static List<int> GetRandomIndexes(int clusterCount, List<PageModel> pages)
-        {
-            var r = new Random();
-            var indexes = new List<int>();
-
-            while (indexes.Count < clusterCount)
-            {
-                var index = r.Next(0, pages.Count);
-
-                if (!indexes.Contains(index))
-                {
-                    indexes.Add(index);
-                }
-            }
-
-            return indexes;
-        }
-
-        /// <summary>
-        /// Инициализация начального состояния кластеров, с рандомным выбором страниц как центроидов кластеров
-        /// </summary>
-        /// <param name="clusterCount"></param>
-        /// <param name="pages"></param>
-        /// <returns></returns>
-        public static List<ClusterModel> InitializeClusters(int clusterCount, List<PageModel> pages)
-        {
-            var indexes = GetRandomIndexes(clusterCount, pages);
-
-            var clusters = new List<ClusterModel>();
-
-            foreach (var index in indexes)
-            {
-                var clusterModel = new ClusterModel() {PageList = new List<PageModel>()};
-                clusterModel.AddPage(pages[index]);
-                clusterModel.CalculateCentroidVector();
-                clusters.Add(clusterModel);
-            }
-
-            return clusters;
-        }
-
-        /// <summary>
-        /// Сравнение двух массивов
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="a1"></param>
-        /// <param name="a2"></param>
-        /// <returns></returns>
-        static bool ArraysEqual<T>(T[] a1, T[] a2)
-        {
-            if (ReferenceEquals(a1, a2))
-                return true;
-
-            if (a1 == null || a2 == null)
-                return false;
-
-            if (a1.Length != a2.Length)
-                return false;
-
-            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-            for (int i = 0; i < a1.Length; i++)
-            {
-                if (!comparer.Equals(a1[i], a2[i])) return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Алгоритм kmeans
-        /// </summary>
-        /// <param name="initClusters">Первоначальное состояние кластеров, с рандомно выбранными центроидами</param>
-        /// <param name="pages">Страницы, которые нужно распихать по кластерам</param>
-        /// <returns></returns>
-        public static List<ClusterModel> KMeans(List<ClusterModel> initClusters, List<PageModel> pages)
-        {
-            // Флаг сходимости
-            bool stopingCriteria = false;
-            // Получаем количество кластеров
-            var clustersCount = initClusters.Count;
-
-            // В цикле, пока метод не сойдется
-            while (stopingCriteria == false)
-            {
-                // Сохраняем первоначальное состояние векторов центроидов кластера
-                List<float[]> prevStateCentroidVectors = new List<float[]>();
-                foreach (var clusterModel in initClusters)
-                {
-                    prevStateCentroidVectors.Add(clusterModel.CentroidVector.Values.ToArray());
-                    clusterModel.PageList = new List<PageModel>();
-                }
-
-                // Бежим по всем страницами
-                foreach (var page in pages)
-                {
-                    // Вектор текущей страницы
-                    float[] pageVector = page.Vector.Values.ToArray();
-                    // Находим максимальное значение, которое будем соотвествовать самому близкому центроиду
-                    float maxValue = 0;
-                    // Индекс центроида
-                    int index = 0;
-                    for (int i = 0; i < clustersCount; i++)
-                    {
-                        // Вектор текущего центроида
-                        float[] centroidVector = initClusters[i].CentroidVector.Values.ToArray();
-                        // Рассчитываем Cosine Similarity, чем оно больше, тем конкретная страница ближе к центроиду
-                        var distance = DistanceMethods.FindCosineSimilarity(pageVector, centroidVector);
-                        if (distance > maxValue)
-                        {
-                            index = i;
-                            maxValue = distance;
-                        }
-                    }
-                    // Запихиваем страницу в кластер, к центроиду которого, она оказалась ближе
-                    initClusters[index].AddPage(page);
-                }
-
-                // Рассчитываем новые центроиды кластеров
-                foreach (var clusterModel in initClusters)
-                {
-                    clusterModel.CalculateCentroidVector();
-                }
-
-                // Если какой либо из векторов центроидов не совпадает с предыдущим состоянием, то
-                // Проходим алгоритм еще раз
-                stopingCriteria = true;
-                for (int i = 0; i < prevStateCentroidVectors.Count; i++)
-                {
-                    if (!ArraysEqual(prevStateCentroidVectors[i], initClusters[i].CentroidVector.Values.ToArray()))
-                    {
-                        stopingCriteria = false;
-                    }
-                }
-            }
-
-            return initClusters;
-        }
+        
+        
 
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
             // Получаем первые n страниц
-            var pages = GetPageModelList(50);
+            var pages = PageMethods.GetPageModelList(50);
             // Количество кластеров
             const int clusterCount = 3;
             // Инициализируем кластеры, выбирая рандомно clusterCount страниц, как центроиды кластеров
-            var initClusters = InitializeClusters(clusterCount, pages);
+            var initClusters = ClusterMethods.InitializeClusters(clusterCount, pages);
             // Применяем алгоритм kmeans
-            KMeans(initClusters, pages);
+            var clusters = ClusterizationMethods.KMeans(initClusters, pages);
         }
 
+
+
+
+
+        #region htmlHelpers
+
+        /// <summary>
+        /// Получаем Html-код страницы
+        /// </summary>
+        /// <param name="url">Ссылка на ресурс</param>
+        private HtmlDocument GetHtml(string url)
+        {
+            try
+            {
+                var http = new HttpClient();
+                var response = http.GetByteArrayAsync(url);
+                /* var response = await http.GetByteArrayAsync(url);*/
+                if (response.Result != null)
+                {
+                    var source = Encoding.GetEncoding(GetEncoding(url))
+                        .GetString(response.Result, 0, response.Result.Length - 1);
+                    source = WebUtility.HtmlDecode(source);
+
+                    var parseDoc = new HtmlDocument();
+                    parseDoc.LoadHtml(source);
+                    return parseDoc;
+                }
+                errorLbl.Text = Resources.ParseForm_GetHtml_Page_is_not_available;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                errorLbl.Text = ex.Message;
+                return null;
+            }
+        }
+        /// <summary>
+        /// Получаем кодировку страницы
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private static string GetEncoding(string url)
+        {
+            var req = WebRequest.Create(url);
+            var contentHeader = req.GetResponse().ContentType;
+            var contentArr = contentHeader.Split(';');
+            return contentArr.Length > 1 ? contentArr[1].Replace("charset=", "").Trim() : "utf-8";
+        }
+        /// <summary>
+        /// Процедура лемматизации слова
+        /// </summary>
+        /// <param name="text"></param>
+        public List<string> Lemmatizer(String text)
+        {
+            //  ' ',
+            var stringArr = text.Split('\n', '\r');
+            stringArr = stringArr.Where(item => item != String.Empty).ToArray();
+            var lemmaList = new List<string>();
+            ILemmatizer lemmatizerRu = new LemmatizerRussian();
+            lemmatizerRu.LoadDictionariesRegistry();
+            foreach (var block in stringArr)
+            {
+                var blockSplit = block.Split(' ');
+                var stringBlock = new StringBuilder();
+                foreach (
+                    var piParadigmCollection in
+                        blockSplit.Select(str => lemmatizerRu.CreateParadigmCollectionFromForm(str, 0, 0))
+                            .Where(piParadigmCollection => piParadigmCollection.Count > 0))
+                {
+                    for (var j = 0; j < 1; j++)
+                    {
+                        object[] args = { j };
+                        var paradigmCollectionType = piParadigmCollection.GetType();
+                        var item = paradigmCollectionType.InvokeMember("Item", BindingFlags.GetProperty, null,
+                            piParadigmCollection, args);
+                        var itemType = item.GetType();
+                        var lemma = itemType.InvokeMember("Norm", BindingFlags.GetProperty, null, item, null);
+                        if (lemma.ToString().Length < MinLength) continue;
+                        stringBlock.Append(lemma + " ");
+                        lemmaList.Add(lemma.ToString());
+                    }
+                }
+                if (!String.IsNullOrEmpty(stringBlock.ToString()))
+                {
+                    //findWordTB.AppendText(stringBlock + Environment.NewLine);
+                }
+            }
+            return lemmaList;
+        }
+
+        private static void LoadTagToList()
+        {
+            _listOfTags.Clear();
+            _tags = SqlMethods.GetTags();
+            foreach (var tag in _tags)
+            {
+                _listOfTags.Add(tag["name"]);
+            }
+        }
+        /// <summary>
+        /// Получаем верхние тэги страницы
+        /// </summary>
+        /// <param name="parseDoc">Html документ подверженный парсингу</param>
+        /// <returns></returns>
+        private string GetTextFromPage(HtmlDocument parseDoc)
+        {
+            var nodes = parseDoc.DocumentNode.Descendants();
+
+            foreach (var tag in _tags)
+            {
+                var currentNodes = nodes.Where(t => t.Name == tag["name"]);
+                foreach (var currentNode in currentNodes.Where(t => t.ParentNode.Name == "body"))
+                {
+                    GetText(currentNode);
+                }
+            }
+
+            return _textResult.ToString();
+        }
+        /// <summary>
+        /// Достаём текст
+        /// </summary>
+        /// <param name="curNode">Текущая ветка</param>
+        private static void GetText(HtmlNode curNode)
+        {
+            foreach (var childNode in curNode.ChildNodes)
+            {
+                if (childNode.Name == "#text" && _listOfTags.Contains(childNode.ParentNode.Name))
+                {
+                    var text = childNode.InnerHtml;
+                    if (text.Contains("<!--") || text.Contains("</")) continue;
+                    text = ClearSpecialChars(text);
+                    text = text.Replace("\n", String.Empty).Trim();
+                    if (text != String.Empty)
+                    {
+                        _textResult.AppendLine(text);
+                    }
+                }
+                else
+                {
+                    GetText(childNode);
+                }
+            }
+        }
+        /// <summary>
+        /// Удаляем спецсимволы из вытащенного текст
+        /// </summary>
+        /// <param name="text">Текст</param>
+        /// <returns>Текст без спецсимволов</returns>
+        public static string ClearSpecialChars(string text)
+        {
+            var specialChars = text.Where(ch => !Char.IsLetterOrDigit(ch) && ch != ' ').ToList();
+
+            foreach (var specialChar in specialChars)
+            {
+                return text.Replace(specialChar.ToString(CultureInfo.InvariantCulture), String.Empty);
+            }
+
+            return text;
+        }
+
+        #endregion
 
     }
 }
