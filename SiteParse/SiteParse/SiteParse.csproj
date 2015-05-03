@@ -52,6 +52,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="ZedGraph">
+      <HintPath>Libraries\ZedGraph.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Algorithm\AbstractCriterionAlgorithm.cs" />
@@ -60,23 +63,23 @@
     <Compile Include="Cluster.cs" />
     <Compile Include="ClusterPair.cs" />
     <Compile Include="ClusterPairs.cs" />
-    <Compile Include="Communication\SqlManager\SqlMethods.cs" />
+    <Compile Include="ClusterVisualization.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ClusterVisualization.Designer.cs">
+      <DependentUpon>ClusterVisualization.cs</DependentUpon>
+    </Compile>
     <Compile Include="Distance\EucledeanDistance.cs" />
     <Compile Include="Distance\JaccardDistance.cs" />
     <Compile Include="Element.cs" />
-    <Compile Include="Forel.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forel.Designer.cs">
-      <DependentUpon>Forel.cs</DependentUpon>
-    </Compile>
     <Compile Include="Fusions\CompleteLinkage.cs" />
-    <Compile Include="Fusions\Fusion.cs" />
+    <Compile Include="HacStart.cs" />
+    <Compile Include="Interfaces\Fusion.cs" />
     <Compile Include="Fusions\SingleLinkage.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="HelpMethods.cs" />
-    <Compile Include="Distance\IDistanceMetric.cs" />
-    <Compile Include="IMethods.cs" />
+    <Compile Include="Interfaces\IDistanceMetric.cs" />
+    <Compile Include="Interfaces\IMethods.cs" />
     <Compile Include="InfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -92,8 +95,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Forel.resx">
-      <DependentUpon>Forel.cs</DependentUpon>
+    <EmbeddedResource Include="ClusterVisualization.resx">
+      <DependentUpon>ClusterVisualization.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InfoForm.resx">
       <DependentUpon>InfoForm.cs</DependentUpon>
@@ -127,12 +130,14 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExternalClassLibrary\ExternalClassLibrary.csproj">
-      <Project>{F6753B3E-8009-46E2-AB11-5134FEB33A21}</Project>
-      <Name>ExternalClassLibrary</Name>
+    <ProjectReference Include="..\Tools\Tools.csproj">
+      <Project>{829e6ab4-7d35-413c-8d19-100cd28dcfbd}</Project>
+      <Name>Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Libraries\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

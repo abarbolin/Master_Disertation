@@ -1,0 +1,4 @@
+C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\bin\Debug\Tools.dll
+C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\bin\Debug\Tools.pdb
+C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\obj\Debug\Tools.dll
+C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\obj\Debug\Tools.pdb

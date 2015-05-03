@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using SiteParse.Fusions;
+using SiteParse.Interfaces;
 
 namespace SiteParse.Algorithm
 {
     /// <summary>
-    /// Abstract class to implement the generic part of the algorithm. Subclasses implement the stop condition to stop the algorithm.
+    /// В этом абстрактном классе реализуется основная часть алгоритма, в дополнительных классах- различные условия остановки
     /// </summary>
     internal abstract class AbstractCriterionAlgorithm
     {
         /// <summary>
-        /// Starts the clustering.
+        /// 
         /// </summary>
-        /// <param name="elements"></param>
+        /// <param name="elements">Элементы</param>
         /// <param name="fusion"></param>
         /// <param name="metric"></param>
         /// <returns></returns>
@@ -21,7 +22,7 @@ namespace SiteParse.Algorithm
             var clusters = new HashSet<Cluster>();
             var pairs = new ClusterPairs();
 
-            // 1. Initialize each element as a cluster
+            // 1. В начале каждый элемент это кластер
             foreach (var el in elements)
             {
                 var cl = new Cluster(fusion);
@@ -29,7 +30,7 @@ namespace SiteParse.Algorithm
                 clusters.Add(cl);
             }
 
-            // 2. a) Calculate the distances of all clusters to all other clusters
+            // 2. a) Ищем расстояние от одного кластера до всех остальных и составляем ClusterPair
             foreach (var cl1 in clusters)
             {
                 foreach (var cl2 in clusters)
@@ -41,30 +42,35 @@ namespace SiteParse.Algorithm
                 }
             }
 
-            // 2. b) Initialize the pair with the lowest distance to each other.
+            
+            // 2. b) Ищем пару кластеров с минимальным расстоянием
             var lowestDistancePair = pairs.LowestDistancePair;
+          
 
             // 3. Merge clusters to new clusters and recalculate distances in a loop until there are only countCluster clusters
             while (!IsFinished(clusters, lowestDistancePair))
             {
-                // a) Merge: Create a new cluster and add the elements of the two old clusters                
+                // a) Merge: Create a new cluster and add the elements of the two old clusters    
+                // Возвращаем наименьшую пару
                 lowestDistancePair = pairs.LowestDistancePair;
+                //Создаём новый кластер
                 var newCluster = new Cluster(fusion); 
+                //Добавляем в него кластеры, между которыми минимальное расстояние
                 newCluster.AddElements(lowestDistancePair.Cluster1.GetElements());
                 newCluster.AddElements(lowestDistancePair.Cluster2.GetElements());
-                // b)Remove the two old clusters from clusters
+                // b)Удаляем их из общего списка кластеров
                 clusters.Remove(lowestDistancePair.Cluster1);
                 clusters.Remove(lowestDistancePair.Cluster2);
-                // c) Remove the two old clusters from pairs
+                // c) Удаляем эти кластеры из Pairs
                 pairs.RemovePairsByOldClusters(lowestDistancePair.Cluster1, lowestDistancePair.Cluster2);
 
-                // d) Calculate the distance of the new cluster to all other clusters and save each as pair
+                // d)Считаем расстояние от найденной минимальной пары, до всех оставшихся кластеров
                 foreach (Cluster cluster in clusters)
                 {
                     var pair = new ClusterPair(cluster, newCluster, cluster.CalculateDistance(newCluster));
                     pairs.AddPair(pair);
                 }
-                // e) Add the new cluster to clusters
+                // e) Добавляем новый кластер
                 clusters.Add(newCluster);
             }
 
@@ -72,7 +78,7 @@ namespace SiteParse.Algorithm
         }
 
         /// <summary>
-        /// Checks if the algorithm has to stop.
+        /// Критерий остановки
         /// </summary>
         /// <param name="currentClusters"></param>
         /// <param name="lowestDistancePair"></param>

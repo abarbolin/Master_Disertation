@@ -32,7 +32,6 @@
             this.siteCompareLb2 = new System.Windows.Forms.ListBox();
             this.distanceBtn = new System.Windows.Forms.Button();
             this.distanceLbl = new System.Windows.Forms.Label();
-            this.forelBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // siteCompareLb1
@@ -69,22 +68,11 @@
             this.distanceLbl.Size = new System.Drawing.Size(0, 13);
             this.distanceLbl.TabIndex = 3;
             // 
-            // forelBtn
-            // 
-            this.forelBtn.Location = new System.Drawing.Point(12, 464);
-            this.forelBtn.Name = "forelBtn";
-            this.forelBtn.Size = new System.Drawing.Size(52, 23);
-            this.forelBtn.TabIndex = 16;
-            this.forelBtn.Text = "Forel";
-            this.forelBtn.UseVisualStyleBackColor = true;
-            this.forelBtn.Click += new System.EventHandler(this.forelBtn_Click);
-            // 
             // InfoForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(862, 505);
-            this.Controls.Add(this.forelBtn);
             this.Controls.Add(this.distanceLbl);
             this.Controls.Add(this.distanceBtn);
             this.Controls.Add(this.siteCompareLb2);
@@ -103,6 +91,5 @@
         private System.Windows.Forms.ListBox siteCompareLb2;
         private System.Windows.Forms.Button distanceBtn;
         private System.Windows.Forms.Label distanceLbl;
-        private System.Windows.Forms.Button forelBtn;
     }
 }

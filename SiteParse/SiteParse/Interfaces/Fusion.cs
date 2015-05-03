@@ -1,5 +1,5 @@
 ﻿
-namespace SiteParse.Fusions
+namespace SiteParse.Interfaces
 {
     public abstract class Fusion
     {

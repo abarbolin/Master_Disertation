@@ -280,6 +280,12 @@ namespace SiteParse
             form.ShowDialog();
         }
 
+        private void visualBtn_Click(object sender, EventArgs e)
+        {
+            var form = new ClusterVisualization();
+            form.ShowDialog();
+        }
+
   
 
     }

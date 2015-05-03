@@ -1,4 +1,5 @@
 ﻿
+using SiteParse.Interfaces;
 
 namespace SiteParse.Fusions
 {

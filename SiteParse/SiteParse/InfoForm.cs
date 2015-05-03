@@ -43,8 +43,8 @@ namespace SiteParse
                 var vectDouble1 = HelpMethods.GetFrequenceArray(vect1); ;
 
                 var vectDouble2 = HelpMethods.GetFrequenceArray(vect2);
-                var distance = new EucledeanDistance().GetDistance(HelpMethods.ConvertDoubleToObjectArr(vectDouble1),
-                    HelpMethods.ConvertDoubleToObjectArr(vectDouble2));
+                var distance = new EucledeanDistance().GetDistance(HelpMethods.ConvertFloatArrToObjectArr(vectDouble1),
+                    HelpMethods.ConvertFloatArrToObjectArr(vectDouble2));
                 distanceLbl.Text = distance.ToString(CultureInfo.InvariantCulture);
 
             }
@@ -52,13 +52,6 @@ namespace SiteParse
             {
                 MessageBox.Show(Resources.InfoForm_distanceBtn_Click_Формирование_векторов_произведено_с_ошибкой__Попробуйте_еще_раз);
             }
-        }
-
-
-        private void forelBtn_Click(object sender, EventArgs e)
-        {
-            var forel = new Forel();
-            forel.ShowDialog();
         }
     }
 }

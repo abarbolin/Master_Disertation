@@ -1,4 +1,6 @@
-﻿namespace SiteParse.Fusions
+﻿using SiteParse.Interfaces;
+
+namespace SiteParse.Fusions
 {
     public class CompleteLinkage : Fusion
     {

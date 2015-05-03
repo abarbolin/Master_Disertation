@@ -41,6 +41,7 @@
             this.waitLBL = new System.Windows.Forms.Label();
             this.errorLbl = new System.Windows.Forms.Label();
             this.infoButton = new System.Windows.Forms.Button();
+            this.visualBtn = new System.Windows.Forms.Button();
             this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -170,11 +171,22 @@
             this.infoButton.UseVisualStyleBackColor = true;
             this.infoButton.Click += new System.EventHandler(this.infoButton_Click);
             // 
+            // visualBtn
+            // 
+            this.visualBtn.Location = new System.Drawing.Point(9, 76);
+            this.visualBtn.Name = "visualBtn";
+            this.visualBtn.Size = new System.Drawing.Size(56, 23);
+            this.visualBtn.TabIndex = 13;
+            this.visualBtn.Text = "Visual";
+            this.visualBtn.UseVisualStyleBackColor = true;
+            this.visualBtn.Click += new System.EventHandler(this.visualBtn_Click);
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.visualBtn);
             this.Controls.Add(this.infoButton);
             this.Controls.Add(this.errorLbl);
             this.Controls.Add(this.waitingPanel);
@@ -212,6 +224,7 @@
         private System.Windows.Forms.Label waitLBL;
         private System.Windows.Forms.Label errorLbl;
         private System.Windows.Forms.Button infoButton;
+        private System.Windows.Forms.Button visualBtn;
     }
 }
 

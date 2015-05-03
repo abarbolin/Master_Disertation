@@ -29,10 +29,9 @@ namespace SiteParse
         private void Forel_Load(object sender, EventArgs e)
         {    
             _realize = new MethodRealization();
-            _realize.ForelAlgorithm(out _allPoints);
+            var x = _realize.ForelAlgorithm(out _allPoints);
 
    
-
             // Get the convex hull.
             _convexPoints = Geometry.MakeConvexHull(_allPoints);
 
@@ -87,14 +86,15 @@ namespace SiteParse
 
             // If we have a counding circle, draw it.
             if (!(_circleRadius > 0)) return;
-            var rect = new RectangleF(
+/*            var rect = new RectangleF(
                 _circleCenter.X - _circleRadius,
                 _circleCenter.Y - _circleRadius,
                 2 * _circleRadius, 2 * _circleRadius);
+
             e.Graphics.DrawEllipse(Pens.Green, rect);
             e.Graphics.FillEllipse(Brushes.Green,
                 _circleCenter.X - 2,
-                _circleCenter.Y - 2, 5, 5);
+                _circleCenter.Y - 2, 5, 5);*/
         }
     }
 }
