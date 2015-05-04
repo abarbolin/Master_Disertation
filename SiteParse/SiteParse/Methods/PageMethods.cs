@@ -15,7 +15,7 @@ namespace SiteParse.Methods
         /// </summary>
         /// <param name="pageCount"></param>
         /// <returns></returns>
-        public static List<PageModel> GetPageModelList(int pageCount)
+        public static List<PageModel> GetPageModelList(int pageCount, string whatKindOfFreq)
         {
             // Получаем словарь со всех страниц
             var wordsFromPages = SqlMethods.GetWordsFromPages(pageCount);
@@ -35,13 +35,14 @@ namespace SiteParse.Methods
                 listPageModel.Add(page);
             }
 
+
             // Забиваем вектор страницы значениями частоты
             foreach (var pageModel in listPageModel)
             {
-                var wordsFrequency = SqlMethods.GetWordsFrequency(pageModel.Id);
+                var wordsFrequency = SqlMethods.GetWordsFrequency(pageModel.Id, whatKindOfFreq);
                 foreach (var wordFrequency in wordsFrequency)
                 {
-                    pageModel.Vector[wordFrequency["word"]] = Convert.ToSingle(wordFrequency["frequency"]);
+                    pageModel.Vector[wordFrequency["word"]] = Convert.ToSingle(wordFrequency[whatKindOfFreq]);
                 }
             }
 

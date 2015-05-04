@@ -44,6 +44,7 @@
             this.parseHistoryBtn = new System.Windows.Forms.Button();
             this.countOfUrls = new System.Windows.Forms.Label();
             this.testClusterBtn = new System.Windows.Forms.Button();
+            this.idfBtn = new System.Windows.Forms.Button();
             this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -201,11 +202,22 @@
             this.testClusterBtn.UseVisualStyleBackColor = true;
             this.testClusterBtn.Click += new System.EventHandler(this.testClusterBtn_Click);
             // 
+            // idfBtn
+            // 
+            this.idfBtn.Location = new System.Drawing.Point(9, 164);
+            this.idfBtn.Name = "idfBtn";
+            this.idfBtn.Size = new System.Drawing.Size(56, 23);
+            this.idfBtn.TabIndex = 16;
+            this.idfBtn.Text = "idf";
+            this.idfBtn.UseVisualStyleBackColor = true;
+            this.idfBtn.Click += new System.EventHandler(this.idfBtn_Click);
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.idfBtn);
             this.Controls.Add(this.testClusterBtn);
             this.Controls.Add(this.countOfUrls);
             this.Controls.Add(this.parseHistoryBtn);
@@ -249,6 +261,7 @@
         private System.Windows.Forms.Button parseHistoryBtn;
         private System.Windows.Forms.Label countOfUrls;
         private System.Windows.Forms.Button testClusterBtn;
+        private System.Windows.Forms.Button idfBtn;
     }
 }
 

@@ -405,7 +405,7 @@ namespace SiteParse
                 }
             }
 
-            return sum/(count*4);
+            return sum/(count);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace SiteParse
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
             // Получаем первые n страниц
-            var pages = PageMethods.GetPageModelList(48);
+            var pages = PageMethods.GetPageModelList(48, "tf_idf");
 
 
             var clustersAfterDivisive = DivisiveMethod(pages);
@@ -631,6 +631,15 @@ namespace SiteParse
         }
 
         #endregion
+
+        private void idfBtn_Click(object sender, EventArgs e)
+        {
+            var idfs = SqlMethods.GetDf();
+            foreach (var idf in idfs)
+            {
+                SqlMethods.UpdateIdf(idf["df"], idf["word"]);
+            }
+        }
 
     }
 }

@@ -10,9 +10,23 @@ namespace SiteParse.Communication.SqlManager
 {
     public class SqlMethods : SqlMethodsBase
     {
-        public static List<Dictionary<string, string>> GetWordsFrequency(int pageId)
+        public static List<Dictionary<string, string>> GetDf()
         {
-            return SQL(@"SELECT w.word, w.frequency FROM Words w
+            return SQL(@"SELECT w.word, COUNT(*)/CAST((SELECT COUNT(*) FROM Pages p) AS FLOAT) as df FROM Words w
+                        GROUP BY w.word");
+        }
+
+        public static void UpdateIdf(string df, string word)
+        {
+            Exec(@"UPDATE Words
+                    SET
+	                    tf_idf = frequency / @0
+                    WHERE word = @1", df.Replace(',','.'), word);
+        }
+
+        public static List<Dictionary<string, string>> GetWordsFrequency(int pageId, string whatKindOfFreq)
+        {
+            return SQL(@"SELECT w.word, w." + whatKindOfFreq + @" FROM Words w
                         WHERE w.id_page = @0", pageId.ToString());
         }
 
