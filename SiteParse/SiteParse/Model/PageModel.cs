@@ -11,5 +11,6 @@ namespace SiteParse.Model
         public int Id { get; set; }
         public Dictionary<string, float> Vector { get; set; }
         public int ArrayMessureId { get; set; }
+        public string Url { get; set; }
     }
 }

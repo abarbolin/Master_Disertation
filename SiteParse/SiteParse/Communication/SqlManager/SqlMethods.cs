@@ -25,7 +25,7 @@ namespace SiteParse.Communication.SqlManager
 
         public static List<Dictionary<string, string>> GetPagesIds(int pageCount)
         {
-            return SQL(@"SELECT TOP " + pageCount + @" id FROM Pages");
+            return SQL(@"SELECT TOP " + pageCount + @" id, url FROM Pages");
         }
 
         public static List<Dictionary<string, string>> GetSites()

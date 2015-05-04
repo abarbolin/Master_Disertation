@@ -27,7 +27,7 @@ namespace SiteParse.Methods
             for (int i = 0; i < pagesReturnCount; i++)
             {
                 // Инициализируем вектор текущей страницы, забивая его нулями
-                var page = new PageModel { Id = Convert.ToInt32(pagesIds[i]["id"]), Vector = new Dictionary<string, float>() };
+                var page = new PageModel { Id = Convert.ToInt32(pagesIds[i]["id"]), Url = pagesIds[i]["url"], Vector = new Dictionary<string, float>() };
                 foreach (var wordFromPage in wordsFromPages)
                 {
                     page.Vector[wordFromPage["word"]] = 0;

@@ -26,10 +26,10 @@ namespace SiteParse.Methods
             while (stopingCriteria == false)
             {
                 // Сохраняем первоначальное состояние векторов центроидов кластера
-                List<float[]> prevStateCentroidVectors = new List<float[]>();
+                var prevStateCentroidVectors = new Dictionary<int,float[]>();
                 foreach (var clusterModel in initClusters)
                 {
-                    prevStateCentroidVectors.Add(clusterModel.CentroidVector.Values.ToArray());
+                    prevStateCentroidVectors[clusterModel.Id] = clusterModel.CentroidVector.Values.ToArray();
                     clusterModel.PageList = new List<PageModel>();
                 }
 
@@ -59,17 +59,37 @@ namespace SiteParse.Methods
                 }
 
                 // Рассчитываем новые центроиды кластеров
+                var emptyClustersIds = new List<int>();
                 foreach (var clusterModel in initClusters)
                 {
-                    clusterModel.CalculateCentroidVector();
+                    if (clusterModel.PageList.Count == 0)
+                    {
+                        emptyClustersIds.Add(clusterModel.Id);
+                    }
+                    else
+                    {
+                        clusterModel.CalculateCentroidVector();    
+                    }
                 }
+
+                if (emptyClustersIds.Count > 0)
+                {
+                    foreach (var emptyClustersId in emptyClustersIds)
+                    {
+                        initClusters.Remove(initClusters.FirstOrDefault(c => c.Id == emptyClustersId));
+                        clustersCount--;
+                    }
+                    continue;
+                }
+
+
 
                 // Если какой либо из векторов центроидов не совпадает с предыдущим состоянием, то
                 // Проходим алгоритм еще раз
                 stopingCriteria = true;
-                for (int i = 0; i < prevStateCentroidVectors.Count; i++)
+                for (int i = 0; i < initClusters.Count; i++)
                 {
-                    if (!Helpers.ArraysEqual(prevStateCentroidVectors[i], initClusters[i].CentroidVector.Values.ToArray()))
+                    if (!Helpers.ArraysEqual(prevStateCentroidVectors[initClusters[i].Id], initClusters[i].CentroidVector.Values.ToArray()))
                     {
                         stopingCriteria = false;
                     }

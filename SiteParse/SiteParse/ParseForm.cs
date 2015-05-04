@@ -156,7 +156,7 @@ namespace SiteParse
                     {
                         if (stringArr[i] != "")
                         {
-                            listUrl.Add(stringArr[i].Split(',')[1]);
+                            listUrl.Add(stringArr[i].Split(',')[0]);
                         }
                     }
                 }
@@ -164,7 +164,7 @@ namespace SiteParse
             }
 
             var urlsCount = listUrl.Count();
-            for(int i = 2500; i<urlsCount; i++)
+            for(int i = 0; i<urlsCount; i++)
             {
                 _textResult = new StringBuilder();
                 string url = listUrl[i];
@@ -286,8 +286,11 @@ namespace SiteParse
         /// <param name="clusters"></param>
         /// <param name="pages"></param>
         /// <param name="arrayOfMeasure"></param>
+        /// <param name="avgOfMeasure">Среднее растояние между объектами</param>
+        /// <param name="stopFlag"></param>
         /// <returns></returns>
-        public static List<ClusterModel> SplitClusters(List<ClusterModel> clusters, List<PageModel> pages, float[][] arrayOfMeasure)
+        public static List<ClusterModel> SplitClusters(List<ClusterModel> clusters, List<PageModel> pages,
+            float[][] arrayOfMeasure, float avgOfMeasure, out bool stopFlag)
         {
             // Бежим по всем кластерам
             foreach (var cluster in clusters)
@@ -307,7 +310,7 @@ namespace SiteParse
                 }
                 else
                 {
-                    cluster.MaxMeasure = new MaxArrayOfMeasureModel{Max=2};
+                    cluster.MaxMeasure = new MaxArrayOfMeasureModel {Max = 2};
                 }
             }
 
@@ -319,10 +322,11 @@ namespace SiteParse
 
             foreach (var cluster in clusters)
             {
-                if (cluster.MaxMeasure.Max < tempMaxMeasure)
+                if (cluster.MaxMeasure.Max < avgOfMeasure)
                 {
                     tempMaxMeasure = cluster.MaxMeasure.Max;
                     splitClusterId = cluster.Id;
+                    break;
                 }
             }
 
@@ -371,9 +375,37 @@ namespace SiteParse
                         secondCluster.AddPage(page);
                     }
                 }
+                stopFlag = false;
+            }
+            else
+            {
+                stopFlag = true;
             }
 
+            
             return clusters;
+        }
+
+
+        public static float GetAvgMeasure(float[][] arrayOfMeasure)
+        {
+            var lengthOfMatrix = arrayOfMeasure[0].Count();
+            float sum = 0;
+            int count = 0;
+
+            for (int i = 0; i < lengthOfMatrix; i++)
+            {
+                for (int j = 0; j < lengthOfMatrix; j++)
+                {
+                    if (i > j)
+                    {
+                        sum += arrayOfMeasure[i][j];
+                        count ++;
+                    }
+                }
+            }
+
+            return sum/(count*4);
         }
 
         /// <summary>
@@ -388,6 +420,7 @@ namespace SiteParse
 
             // Получаем матрицу расстояний
             var arrayOfMeasure = GetArrayOfMeasure(pages);
+            var avgOfMeasure = GetAvgMeasure(arrayOfMeasure);
 
             // Создаем первый кластер, в который будут входить все страницы
             var initCluster = new ClusterModel() {Id = 1};
@@ -397,31 +430,43 @@ namespace SiteParse
             }
             clusters.Add(initCluster);
 
-            // ToDo: Добавить критерий остановки
-            int i = 0;
-            while (i < 30)
+            bool stopFlag = false;
+            while (!stopFlag)
             {
-                SplitClusters(clusters, pages, arrayOfMeasure);
-                i++;
+                SplitClusters(clusters, pages, arrayOfMeasure, avgOfMeasure, out stopFlag);
             }
-            var s = clusters.Where(c => c.PageList.Count > 2);
-            return clusters;
+            var notSingleClusters = clusters.Where(c => c.PageList.Count > 2).ToList();
+            return notSingleClusters;
         }
 
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
             // Получаем первые n страниц
-            var pages = PageMethods.GetPageModelList(50);
+            var pages = PageMethods.GetPageModelList(48);
 
 
-            var s = DivisiveMethod(pages);
+            var clustersAfterDivisive = DivisiveMethod(pages);
+            foreach (var clusterModel in clustersAfterDivisive)
+            {
+                clusterModel.CalculateCentroidVector();
+            }
 
             // Количество кластеров
-            const int clusterCount = 3;
+            //const int clusterCount = 3;
             // Инициализируем кластеры, выбирая рандомно clusterCount страниц, как центроиды кластеров
-            var initClusters = ClusterMethods.InitializeClusters(clusterCount, pages);
+            //var initClusters = ClusterMethods.InitializeClusters(clusterCount, pages);
             // Применяем алгоритм kmeans
-            var clusters = ClusterizationMethods.KMeans(initClusters, pages);
+            var clusters = ClusterizationMethods.KMeans(clustersAfterDivisive, pages);
+            foreach (var clusterModel in clusters)
+            {
+                string pagesString = "=========================================" + Environment.NewLine;
+                foreach (var pageModel in clusterModel.PageList)
+                {
+                    pagesString += pageModel.Url + Environment.NewLine;
+                }
+                pagesString += "===============================================" + Environment.NewLine;
+                ParseBox.Text += pagesString + Environment.NewLine;
+            }
         }
 
 
