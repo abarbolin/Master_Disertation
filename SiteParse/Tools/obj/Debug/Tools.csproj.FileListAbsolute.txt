@@ -2,3 +2,11 @@ C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\bin\De
 C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\bin\Debug\Tools.pdb
 C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\obj\Debug\Tools.dll
 C:\Users\Вадим\Documents\Visual Studio 2013\Projects\SiteParse\Tools\obj\Debug\Tools.pdb
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Debug\Tools.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Debug\Tools.pdb
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Debug\Tools.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Debug\Tools.pdb
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Debug\Tools.SolutionResources.resources
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Debug\Tools.csproj.GenerateResource.Cache
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Debug\Tools.csprojResolveAssemblyReference.cache

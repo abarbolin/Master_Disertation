@@ -10,8 +10,9 @@ using System.Text;
 using System.Windows.Forms;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
-using SiteParse.Communication.SqlManager;
 using SiteParse.Properties;
+using Tools;
+using Tools.Communication.SqlManager;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace SiteParse
@@ -22,6 +23,7 @@ namespace SiteParse
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
         private const int MinLength = 5;
+        private static int _userId = 0;
        
 
         public ParseForm()
@@ -48,8 +50,22 @@ namespace SiteParse
             _textResult = new StringBuilder();
             _listOfTags = new List<string>();
             errorLbl.Text = String.Empty;
+            _userId = LoadUserId();
             LoadPanelConfig();
             ParseBox.ScrollBars = ScrollBars.Vertical;
+        }
+        /// <summary>
+        /// Возвращаем идентификатор польщователя
+        /// </summary>
+        /// <returns></returns>
+        private static int LoadUserId()
+        {
+            var localIPs = Dns.GetHostAddresses(Dns.GetHostName())[2];
+
+            var userId = SqlMethods.GetUserId(localIPs.ToString(), SolutionResources.myHost);
+
+            return userId;
+
         }
         /// <summary>
         /// Событие начала парсинга страницы
@@ -157,7 +173,9 @@ namespace SiteParse
             TermFrequencyMethod(lemmaList);
 
         }
-
+        /// <summary>
+        /// Загрузка списка тэгов
+        /// </summary>
         private static void LoadTagToList()
         {
             _listOfTags.Clear();
@@ -253,7 +271,7 @@ namespace SiteParse
 
             if (SqlMethods.ExistsPage(urlBox.Text) == 0)
             {
-                var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount));
+                var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount, _userId,SolutionResources.myHost));
 
                 foreach (var item in sortedDict)
                 {
@@ -284,6 +302,30 @@ namespace SiteParse
         {
             var form = new ClusterVisualization();
             form.ShowDialog();
+        }
+
+        private void userParseBtn_Click(object sender, EventArgs e)
+        {
+            ParseInfoForAllUsers();
+        }
+
+        /// <summary>
+        /// Достаём  сайты всех пользователей и кластеризуем
+        /// </summary>
+        public  void ParseInfoForAllUsers()
+        {
+            var userList = SqlMethods.GetAllUsers();
+            foreach (var item in userList)
+            {
+                var getUserPages = SqlMethods.GetUserPagesAndCountLemm(Convert.ToInt32(item["id"]));
+                foreach (var itemPage in getUserPages)
+                {
+                    if (Convert.ToInt32(itemPage["count_lemm"]) <= 0)
+                    {
+                        GetHtml(itemPage["URL"]);
+                    }
+                }
+            }
         }
 
   

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Forms;
-using SiteParse.Communication.SqlManager;
 using SiteParse.Distance;
 using SiteParse.Properties;
+using Tools.Communication.SqlManager;
 
 
 namespace SiteParse

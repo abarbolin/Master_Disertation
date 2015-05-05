@@ -1,0 +1,8 @@
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Release\Tools.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Release\Tools.pdb
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\bin\Release\Newtonsoft.Json.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Release\Tools.csprojResolveAssemblyReference.cache
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Release\Tools.SolutionResources.resources
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Release\Tools.csproj.GenerateResource.Cache
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Release\Tools.dll
+C:\Users\Вадим\Documents\Master_Disertation\SiteParse\Tools\obj\Release\Tools.pdb

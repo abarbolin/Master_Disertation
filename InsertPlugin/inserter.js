@@ -1,28 +1,29 @@
-﻿var getIpUrl="https://jsonip.appspot.com";
+﻿var serviceUrl = "http://localhost:9855/Main/InsertUserInfo";
+var getIpUrl="https://jsonip.appspot.com";
+
+
+var browserName = navigator.userAgent.toLowerCase();
+console.log("browser name ="+ browserName);
 
 var currentUrl = window.location.href;
 console.log("currentUrl="+currentUrl);
 
-var userIp = 0;
+var currentHost = location.hostname;
+console.log("currentHost="+currentHost);
+
 $.getJSON(getIpUrl,
     function(data){
-	   userIp = data.ip;
        console.log("Your ip: " + data.ip);
+	   
+	   $.ajax({
+	    method: "POST",
+	    url:serviceUrl,
+	    data:{
+		   Url:currentUrl, 
+		   Id:  data.ip,
+		   BrowserType:browserName,
+		   HostUrl :currentHost
+	     }
+        });
     });
 
-/*var serviceUrl = "www.google.ru";
-var userId = 5;
-$.ajax{
-	method: "POST",
-	url:serviceUrl,
-	data:{
-		url:currentUrl, userId: userId
-	}
-	.success{
-		console.log("Данные успешно отправлены");
-	}
-	.error{ function(response){
-		console.log("Произошла ошибка :"+response);
-	}		
-	}
-}*/

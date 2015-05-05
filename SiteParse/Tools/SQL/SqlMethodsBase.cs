@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
+using System.Configuration;
 
-namespace ExternalClassLibrary.SQL
+namespace Tools.SQL
 {
     public class SqlMethodsBase
     {
@@ -11,7 +11,7 @@ namespace ExternalClassLibrary.SQL
         /// </summary>
         /// <returns></returns>
         protected static SqlConnection Connect()
-        {
+        {     
             var connect = new SqlConnection(ConnectString);
             connect.Open();
             return connect;

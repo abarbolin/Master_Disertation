@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
-using ExternalClassLibrary.SQL;
 using System.Configuration;
+using Tools.SQL;
 
 namespace SiteParse
 {

@@ -42,6 +42,7 @@
             this.errorLbl = new System.Windows.Forms.Label();
             this.infoButton = new System.Windows.Forms.Button();
             this.visualBtn = new System.Windows.Forms.Button();
+            this.userParseBtn = new System.Windows.Forms.Button();
             this.waitingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -152,12 +153,12 @@
             // errorLbl
             // 
             this.errorLbl.AutoSize = true;
-            this.errorLbl.Font = new System.Drawing.Font("Wasco Sans", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.errorLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errorLbl.ForeColor = System.Drawing.Color.Red;
             this.errorLbl.Location = new System.Drawing.Point(746, 17);
             this.errorLbl.MaximumSize = new System.Drawing.Size(300, 50);
             this.errorLbl.Name = "errorLbl";
-            this.errorLbl.Size = new System.Drawing.Size(58, 20);
+            this.errorLbl.Size = new System.Drawing.Size(57, 20);
             this.errorLbl.TabIndex = 10;
             this.errorLbl.Text = "label1";
             // 
@@ -181,11 +182,23 @@
             this.visualBtn.UseVisualStyleBackColor = true;
             this.visualBtn.Click += new System.EventHandler(this.visualBtn_Click);
             // 
+            // userParseBtn
+            // 
+            this.userParseBtn.Location = new System.Drawing.Point(9, 118);
+            this.userParseBtn.Margin = new System.Windows.Forms.Padding(2);
+            this.userParseBtn.Name = "userParseBtn";
+            this.userParseBtn.Size = new System.Drawing.Size(56, 38);
+            this.userParseBtn.TabIndex = 14;
+            this.userParseBtn.Text = "User Parse";
+            this.userParseBtn.UseVisualStyleBackColor = true;
+            this.userParseBtn.Click += new System.EventHandler(this.userParseBtn_Click);
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.userParseBtn);
             this.Controls.Add(this.visualBtn);
             this.Controls.Add(this.infoButton);
             this.Controls.Add(this.errorLbl);
@@ -225,6 +238,7 @@
         private System.Windows.Forms.Label errorLbl;
         private System.Windows.Forms.Button infoButton;
         private System.Windows.Forms.Button visualBtn;
+        private System.Windows.Forms.Button userParseBtn;
     }
 }
 

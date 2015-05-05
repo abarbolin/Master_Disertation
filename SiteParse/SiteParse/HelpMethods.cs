@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SiteParse.Communication.SqlManager;
 using SiteParse.Distance;
 using SiteParse.Interfaces;
+using Tools.Communication.SqlManager;
 
 #endregion
 
