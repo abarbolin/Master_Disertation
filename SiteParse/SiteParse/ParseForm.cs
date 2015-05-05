@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using HtmlAgilityPack;
 using LEMMATIZERLib;
@@ -19,27 +21,27 @@ namespace SiteParse
 {
     public partial class ParseForm : Form
     {
-        private static StringBuilder _textResult;
+        //        private static StringBuilder _textResult;
         private static List<Dictionary<string, string>> _tags;
         private static List<string> _listOfTags;
         private const int MinLength = 5;
         private static int _userId = 0;
-       
+
 
         public ParseForm()
         {
             InitializeComponent();
         }
 
-        private void LoadPanelConfig()
-        {
-            waitingPanel.Location = new Point(
-            ClientSize.Width / 2 - waitingPanel.Size.Width / 2,
-            ClientSize.Height / 2 - waitingPanel.Size.Height / 2
-            );
-            waitingPanel.Anchor = AnchorStyles.None;
-            waitingPanel.BorderStyle = BorderStyle.Fixed3D;
-        }
+        //        private void LoadPanelConfig()
+        //        {
+        //            waitingPanel.Location = new Point(
+        //            ClientSize.Width / 2 - waitingPanel.Size.Width / 2,
+        //            ClientSize.Height / 2 - waitingPanel.Size.Height / 2
+        //            );
+        //            waitingPanel.Anchor = AnchorStyles.None;
+        //            waitingPanel.BorderStyle = BorderStyle.Fixed3D;
+        //        }
         /// <summary>
         /// Событие загрузки формы
         /// </summary>
@@ -47,11 +49,10 @@ namespace SiteParse
         /// <param name="e"></param>
         private void ParseForm_Load(object sender, EventArgs e)
         {
-            _textResult = new StringBuilder();
+            progressBar1.Visible = false;
             _listOfTags = new List<string>();
             errorLbl.Text = String.Empty;
             _userId = LoadUserId();
-            LoadPanelConfig();
             ParseBox.ScrollBars = ScrollBars.Vertical;
         }
         /// <summary>
@@ -74,54 +75,156 @@ namespace SiteParse
         /// <param name="e"></param>
         private void ParseBtn_Click(object sender, EventArgs e)
         {
-        
+            string siteInfo;
+            List<string> list;
+            StringBuilder lemmatext;
+            StringBuilder formatText;
+            string error;
+            clearControls();
+
+            ParseWebSites(urlBox.Text, out siteInfo, out list, out lemmatext, out formatText, out error, true);
+
+            if (error == String.Empty)
+            {
+                ParseBox.Text = siteInfo;
+                findWordTB.Text = formatText.ToString();
+                lemmaBox.Text = lemmatext.ToString();
+            }
+            else
+            {
+                errorLbl.Text = error;
+            }
+
+
+        }
+
+        public void clearControls()
+        {
             ParseBox.Clear();
             findWordTB.Clear();
             lemmaBox.Clear();
-            _textResult.Clear();
-
-            var url = urlBox.Text;
-            if (url != String.Empty)
-            {
-                GetHtml(url);
-            }
-         
+            errorLbl.Text = String.Empty;
         }
         /// <summary>
         /// Получаем Html-код страницы
         /// </summary>
         /// <param name="url">Ссылка на ресурс</param>
-        private  void GetHtml(string url)
+        /// <param name="error"></param>
+        private HtmlDocument GetHtml(string url, out string error)
         {
+            if (url == String.Empty)
+            {
+                error = "Вы передали пустой url";
+                return null;
+            }
             try
             {
-                waitingPanel.Visible = true;
                 var http = new HttpClient();
                 var response = http.GetByteArrayAsync(url);
-               /* var response = await http.GetByteArrayAsync(url);*/
+
                 if (response.Result != null)
                 {
-                    var source = Encoding.GetEncoding(GetEncoding(url))
-                        .GetString(response.Result, 0, response.Result.Length - 1);
-                    source = WebUtility.HtmlDecode(source);
-
                     var parseDoc = new HtmlDocument();
-                    parseDoc.LoadHtml(source);
 
-                    ParseBox.Text = GetHeadTags(parseDoc);
+                    parseDoc.LoadHtml(GetPageSourceWithNeedEncoding(url, response));
+
+                    error = string.Empty;
+                    return parseDoc;
+
                 }
-                else
-                {
-                    errorLbl.Text=Resources.ParseForm_GetHtml_Page_is_not_available;
-                }
-                waitingPanel.Visible = false;
+                error = Resources.ParseForm_GetHtml_Page_is_not_available;
+                return null;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                error = ex.Message;
+                return null;
             }
 
 
+        }
+        /// <summary>
+        /// Получаем текст страницы в нужной кодировке
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public string GetPageSourceWithNeedEncoding(string url, Task<byte[]> response)
+        {
+            var source = Encoding.GetEncoding(GetEncoding(url))
+                        .GetString(response.Result, 0, response.Result.Length - 1);
+            source = WebUtility.HtmlDecode(source);
+
+            return source;
+
+        }
+
+        public void ParseWebSites(string url, out string siteInfo, out  List<string> lemmaList, out StringBuilder textForLemmaBox, out StringBuilder formatText, out string error, bool needText)
+        {
+            //Проверяем, есть ли у нас уже такая страница
+            if (!IsExistsPage(url))
+            {
+                //Получаем html документ нашего сайта
+                var htmlDoc = GetHtml(url, out error);
+                //Если документ успешно получен
+                if (error == String.Empty)
+                {
+                    //Получаем всю важную информацию с сайта
+                    siteInfo = GetHeadTags(htmlDoc);
+                    //Получаем список лемм с сайта
+                    lemmaList = Lemmatizer(siteInfo, out formatText);
+                    //Получаем отсортированный список с применением TF
+                    var sortWordlst = TermFrequencyMethod(lemmaList, url);
+                    var keyValuePairs = sortWordlst as KeyValuePair<string, int>[] ?? sortWordlst.ToArray();
+                    textForLemmaBox = needText ? GetTextForLemmaBox(keyValuePairs, keyValuePairs.Count()) : null;
+
+                }
+                else
+                {
+                    InitiAlizeOutParam(out siteInfo, out lemmaList, out textForLemmaBox, out formatText);
+                }
+
+            }
+            else
+            {
+                error = "Такая страница уже есть в БД";
+                InitiAlizeOutParam(out siteInfo, out lemmaList, out textForLemmaBox, out formatText);
+            }
+
+        }
+        /// <summary>
+        /// Облегченная версия, если нам не нужны параметры для текстбоксов
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public string ParseWebSitesWithoutOutParameters(string url)
+        {
+            string error;
+            if (!IsExistsPage(url))
+                {
+                    //Получаем html документ нашего сайта
+                    var htmlDoc = GetHtml(url, out error);
+                    if (error == String.Empty)
+                    {
+                        //Получаем всю важную информацию с сайта
+                        var siteInfo = GetHeadTags(htmlDoc);
+                        //Получаем список лемм с сайта
+                        StringBuilder formatText;
+                        var lemmaList = Lemmatizer(siteInfo, out formatText);
+                        //Получаем отсортированный список с применением TF
+                        TermFrequencyMethod(lemmaList, url);
+                    }
+                    return error;
+                }
+            error = "Такая страница уже есть в БД";
+            return error;
+        }
+        public void InitiAlizeOutParam(out string siteInfo, out List<string> lemmaList, out StringBuilder textForLemmaBox, out StringBuilder formatText)
+        {
+            lemmaList = null;
+            textForLemmaBox = null;
+            formatText = null;
+            siteInfo = null;
         }
         /// <summary>
         /// Получаем кодировку страницы
@@ -135,18 +238,23 @@ namespace SiteParse
             var contentArr = contentHeader.Split(';');
             return contentArr.Length > 1 ? contentArr[1].Replace("charset=", "").Trim() : "utf-8";
         }
+
         /// <summary>
         /// Процедура лемматизации слова
         /// </summary>
         /// <param name="text"></param>
-        public void Lemmatizer(String text)
+        /// <param name="formatText"></param>
+        public List<string> Lemmatizer(String text, out StringBuilder formatText)
         {
             //  ' ',
+            formatText = new StringBuilder();
             var stringArr = text.Split('\n', '\r');
             stringArr = stringArr.Where(item => item != String.Empty).ToArray();
+
             var lemmaList = new List<string>();
             ILemmatizer lemmatizerRu = new LemmatizerRussian();
             lemmatizerRu.LoadDictionariesRegistry();
+
             foreach (var block in stringArr)
             {
                 var blockSplit = block.Split(' ');
@@ -167,10 +275,11 @@ namespace SiteParse
                 }
                 if (!String.IsNullOrEmpty(stringBlock.ToString()))
                 {
-                    findWordTB.AppendText(stringBlock + Environment.NewLine);
+                    formatText.Append(stringBlock + Environment.NewLine);
                 }
             }
-            TermFrequencyMethod(lemmaList);
+
+            return lemmaList;
 
         }
         /// <summary>
@@ -190,29 +299,34 @@ namespace SiteParse
         /// </summary>
         /// <param name="parseDoc">Html документ подверженный парсингу</param>
         /// <returns></returns>
-        private string GetHeadTags(HtmlDocument parseDoc)
+        private static string GetHeadTags(HtmlDocument parseDoc)
         {
+            var result = new StringBuilder();
             var nodes = parseDoc.DocumentNode.Descendants();
             LoadTagToList();
 
+
             foreach (var tag in _tags)
             {
-                var currentNodes = nodes.Where(t => t.Name == tag["name"]);
+                var tag1 = tag;
+                var currentNodes = nodes.Where(t => t.Name == tag1["name"]);
                 foreach (var currentNode in currentNodes.Where(t => t.ParentNode.Name == "body"))
                 {
-                    GetText(currentNode);
+                    GetText(currentNode, result);
                 }
             }
-            Lemmatizer(_textResult.ToString());
 
-            return _textResult.ToString();
+            return result.ToString();
         }
+
         /// <summary>
         /// Достаём текст
         /// </summary>
         /// <param name="curNode">Текущая ветка</param>
-        private static void GetText(HtmlNode curNode)
+        /// <param name="result"></param>
+        private static void GetText(HtmlNode curNode, StringBuilder result)
         {
+
             foreach (var childNode in curNode.ChildNodes)
             {
                 if (childNode.Name == "#text" && _listOfTags.Contains(childNode.ParentNode.Name))
@@ -223,12 +337,12 @@ namespace SiteParse
                     text = text.Replace("\n", String.Empty).Trim();
                     if (text != String.Empty)
                     {
-                        _textResult.AppendLine(text);
+                        result.AppendLine(text);
                     }
                 }
                 else
                 {
-                    GetText(childNode);
+                    GetText(childNode, result);
                 }
             }
         }
@@ -259,76 +373,151 @@ namespace SiteParse
             ParseBox.SelectAll();
             Clipboard.SetText(ParseBox.Text);
         }
+
+        public bool IsExistsPage(string url)
+        {
+            return SqlMethods.ExistsPage(url) != 0;
+        }
+
         /// <summary>
         /// Метод поиска частоты слова
         /// </summary>
         /// <param name="lemmaList"></param>
-        private void TermFrequencyMethod(IEnumerable<string> lemmaList)
+        /// <param name="url"></param>
+        private IEnumerable<KeyValuePair<string, int>> TermFrequencyMethod(IEnumerable<string> lemmaList, string url)
         {
+
             var withCountDict = lemmaList.GroupBy(x => x).ToDictionary(x => x.Key, x => x.Count());
             var sortedDict = from entry in withCountDict orderby entry.Key ascending select entry;
             var totalCount = sortedDict.Count();
 
-            if (SqlMethods.ExistsPage(urlBox.Text) == 0)
-            {
-                var pageId = Convert.ToInt32(SqlMethods.AddPage(urlBox.Text, totalCount, _userId,SolutionResources.myHost));
 
-                foreach (var item in sortedDict)
-                {
-                    SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double)item.Value / totalCount));
-                }
-            }
-            else
-            {
-                 errorLbl.Text=Resources.ParseForm_TermFrequencyMethod_Данная_страница_уже_добавлена_в_БД;
-            }
+            var pageId = Convert.ToInt32(SqlMethods.AddPage(url, totalCount, _userId, SolutionResources.myHost));
 
             foreach (var item in sortedDict)
             {
-                lemmaBox.Text += item.Key + Resources.ParseForm_TermFrequencyMethod_ + string.Format("{0:N6}", (double)item.Value / totalCount) + Environment.NewLine;
+                SqlMethods.AddWord(item.Key, pageId, string.Format("{0:N6}", (double)item.Value / totalCount));
             }
 
-
+            return sortedDict;
         }
-        
+        /// <summary>
+        /// Возвращает еткст с лемматизированными словами
+        /// </summary>
+        /// <param name="sortedDict"></param>
+        /// <param name="totalCount"></param>
+        public StringBuilder GetTextForLemmaBox(IEnumerable<KeyValuePair<string, int>> sortedDict, int totalCount)
+        {
+            var result = new StringBuilder();
+            foreach (var item in sortedDict)
+            {
+                result.Append(item.Key + Resources.ParseForm_TermFrequencyMethod_ + string.Format("{0:N6}", (double)item.Value / totalCount) + Environment.NewLine);
+            }
+            return result;
+        }
 
+
+        /// <summary>
+        /// Вызов формы InfoForm
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void infoButton_Click(object sender, EventArgs e)
         {
             var form = new InfoForm();
             form.ShowDialog();
         }
-
+        /// <summary>
+        /// Вызов формы ClusterVisualization
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void visualBtn_Click(object sender, EventArgs e)
         {
             var form = new ClusterVisualization();
             form.ShowDialog();
         }
-
+        /// <summary>
+        /// По нажатию на кнопку начинаем парсить все сайты в БД
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void userParseBtn_Click(object sender, EventArgs e)
         {
-            ParseInfoForAllUsers();
+            progressBar1.Maximum = 100;
+            progressBar1.Step = 1;
+            progressBar1.Value = 0;
+            progressBar1.Visible = true;
+            userParseBtn.Enabled = false;
+            backgroundWorker1.RunWorkerAsync();
+            backgroundWorker1.WorkerReportsProgress = true;
         }
 
         /// <summary>
         /// Достаём  сайты всех пользователей и кластеризуем
         /// </summary>
-        public  void ParseInfoForAllUsers()
+        public void ParseInfoForAllUsers()
         {
-            var userList = SqlMethods.GetAllUsers();
-            foreach (var item in userList)
+            var i = 0.0d;
+            var countPages = SqlMethods.GetCountPages();
+            var error = new StringBuilder();
+            try
             {
-                var getUserPages = SqlMethods.GetUserPagesAndCountLemm(Convert.ToInt32(item["id"]));
-                foreach (var itemPage in getUserPages)
+                
+                var userList = SqlMethods.GetAllUsers();
+                foreach (var item in userList)
                 {
-                    if (Convert.ToInt32(itemPage["count_lemm"]) <= 0)
+                  
+                    var getUserPages = SqlMethods.GetUserPagesAndCountLemm(Convert.ToInt32(item["id"]));
+
+                    foreach (var itemPage in getUserPages)
                     {
-                        GetHtml(itemPage["URL"]);
+                        i += (double)1/countPages*100;
+                        backgroundWorker1.ReportProgress((int) i);
+                            var result = ParseWebSitesWithoutOutParameters(itemPage["URL"]);
+                            if (result != String.Empty)
+                            {
+                                error.AppendLine(result);
+                            }
+                        
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                error.AppendLine(ex.Message);
+            }
+            
         }
 
-  
+        /// <summary>
+        /// ВЫполняем в фоне
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+           
+            ParseInfoForAllUsers();
+            
+        }
+        /// <summary>
+        /// Изменяем значение 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar1.Value = e.ProgressPercentage;
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            userParseBtn.Enabled = true;
+            progressBar1.Visible = false;
+        }
+
+
 
     }
 }

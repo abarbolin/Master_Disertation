@@ -37,13 +37,12 @@
             this.lemmaLbl = new System.Windows.Forms.Label();
             this.findWordLbl = new System.Windows.Forms.Label();
             this.findWordTB = new System.Windows.Forms.TextBox();
-            this.waitingPanel = new System.Windows.Forms.Panel();
-            this.waitLBL = new System.Windows.Forms.Label();
             this.errorLbl = new System.Windows.Forms.Label();
             this.infoButton = new System.Windows.Forms.Button();
             this.visualBtn = new System.Windows.Forms.Button();
             this.userParseBtn = new System.Windows.Forms.Button();
-            this.waitingPanel.SuspendLayout();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // ParseBtn
@@ -131,25 +130,6 @@
             this.findWordTB.Size = new System.Drawing.Size(958, 121);
             this.findWordTB.TabIndex = 7;
             // 
-            // waitingPanel
-            // 
-            this.waitingPanel.Controls.Add(this.waitLBL);
-            this.waitingPanel.Location = new System.Drawing.Point(460, 257);
-            this.waitingPanel.Name = "waitingPanel";
-            this.waitingPanel.Size = new System.Drawing.Size(200, 59);
-            this.waitingPanel.TabIndex = 9;
-            this.waitingPanel.Visible = false;
-            // 
-            // waitLBL
-            // 
-            this.waitLBL.AutoSize = true;
-            this.waitLBL.Font = new System.Drawing.Font("Stencil", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.waitLBL.Location = new System.Drawing.Point(47, 19);
-            this.waitLBL.Name = "waitLBL";
-            this.waitLBL.Size = new System.Drawing.Size(102, 22);
-            this.waitLBL.TabIndex = 0;
-            this.waitLBL.Text = "Wait..... ";
-            // 
             // errorLbl
             // 
             this.errorLbl.AutoSize = true;
@@ -193,16 +173,29 @@
             this.userParseBtn.UseVisualStyleBackColor = true;
             this.userParseBtn.Click += new System.EventHandler(this.userParseBtn_Click);
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker1_ProgressChanged);
+            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(750, 44);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(80, 23);
+            this.progressBar1.TabIndex = 15;
+            // 
             // ParseForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1062, 583);
+            this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.userParseBtn);
             this.Controls.Add(this.visualBtn);
             this.Controls.Add(this.infoButton);
             this.Controls.Add(this.errorLbl);
-            this.Controls.Add(this.waitingPanel);
             this.Controls.Add(this.findWordLbl);
             this.Controls.Add(this.findWordTB);
             this.Controls.Add(this.lemmaLbl);
@@ -215,8 +208,6 @@
             this.Name = "ParseForm";
             this.Text = "Parse";
             this.Load += new System.EventHandler(this.ParseForm_Load);
-            this.waitingPanel.ResumeLayout(false);
-            this.waitingPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -233,12 +224,12 @@
         private System.Windows.Forms.Label lemmaLbl;
         private System.Windows.Forms.Label findWordLbl;
         private System.Windows.Forms.TextBox findWordTB;
-        private System.Windows.Forms.Panel waitingPanel;
-        private System.Windows.Forms.Label waitLBL;
         private System.Windows.Forms.Label errorLbl;
         private System.Windows.Forms.Button infoButton;
         private System.Windows.Forms.Button visualBtn;
         private System.Windows.Forms.Button userParseBtn;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.ProgressBar progressBar1;
     }
 }
 

@@ -8,10 +8,15 @@ using SiteParse.Interfaces;
 
 namespace SiteParse.Distance
 {
-    public class EucledeanDistance : IDistanceMetric
+    class PowerLowDistance: IDistanceMetric
     {
+
+        public const double P = 2.0d;
+
+        public const double R = 2.0d;
         /// <summary>
-        ///  Представляет собой геометрическим расстоянием в многомерном пространстве:
+        ///  Применяется в случае, когда необходимо увеличить или уменьшить вес, относящийся к размерности, 
+        /// для которой соответствующие объекты сильно отличаются. Степенное расстояние вычисляется по следующей формуле:
         /// </summary>
         /// <param name="set1"></param>
         /// <param name="set2"></param>
@@ -24,10 +29,10 @@ namespace SiteParse.Distance
                 var sumSquaredDiffs = 0.0;
                 for (var i = 0; i < set1.Length; ++i)
                 {
-                    sumSquaredDiffs += Math.Pow((Convert.ToDouble(set1[i]) - Convert.ToDouble(set2[i])), 2);
+                    sumSquaredDiffs += Math.Pow((Convert.ToDouble(set1[i]) - Convert.ToDouble(set2[i])), P);
                 }
 
-                return Math.Sqrt(sumSquaredDiffs);
+                return Math.Pow(sumSquaredDiffs,1d/R);
             }
             catch (Exception ex)
             {  
@@ -35,5 +40,7 @@ namespace SiteParse.Distance
                 return -1;
             }       
         }
+    }
+    {
     }
 }

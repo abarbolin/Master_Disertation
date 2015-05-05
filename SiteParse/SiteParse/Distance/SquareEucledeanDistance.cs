@@ -8,15 +8,14 @@ using SiteParse.Interfaces;
 
 namespace SiteParse.Distance
 {
-    public class EucledeanDistance : IDistanceMetric
+    class SquareEucledeanDistance:IDistanceMetric
     {
         /// <summary>
-        ///  Представляет собой геометрическим расстоянием в многомерном пространстве:
+        /// Применяется для придания большего веса более отдаленным друг от друга объектам. Это расстояние вычисляется следующим образом:
         /// </summary>
         /// <param name="set1"></param>
         /// <param name="set2"></param>
         /// <returns></returns>
-
         public double GetDistance(object[] set1, object[] set2)
         {
             try
@@ -27,13 +26,13 @@ namespace SiteParse.Distance
                     sumSquaredDiffs += Math.Pow((Convert.ToDouble(set1[i]) - Convert.ToDouble(set2[i])), 2);
                 }
 
-                return Math.Sqrt(sumSquaredDiffs);
+                return sumSquaredDiffs;
             }
             catch (Exception ex)
-            {  
+            {
                 MessageBox.Show(ex.Message);
                 return -1;
-            }       
+            }
         }
     }
 }

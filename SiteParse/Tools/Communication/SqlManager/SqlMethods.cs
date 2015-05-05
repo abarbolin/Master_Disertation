@@ -10,7 +10,7 @@ namespace Tools.Communication.SqlManager
 {
     public class SqlMethods : SqlMethodsBase
     {
-
+        #region GetMethods
         public static List<Dictionary<string, string>> GetSites()
         {
             return SQL("select id, url from Pages");
@@ -23,6 +23,39 @@ namespace Tools.Communication.SqlManager
         public static List<Dictionary<string, string>> GetTags()
         {
             return SQL("select name from Tags");
+        }
+        /// <summary>
+        /// Получаем нового юзера или достаём id старого
+        /// </summary>
+        /// <param name="externalUserId"></param>
+        /// <param name="browserInfo"></param>
+        /// <returns></returns>
+        public static int GetUserId(string externalUserId, string browserInfo)
+        {
+            var userId = ExistsUser(externalUserId);
+            return userId <= 0 ? Convert.ToInt32(InsertNewUser(externalUserId, browserInfo)) : userId;
+        }
+        /// <summary>
+        /// Получаем кол-во страниц в БД
+        /// </summary>
+        /// <returns></returns>
+        public static int GetCountPages()
+        {
+            return Convert.ToInt32(GetScalar("SELECT COUNT(*) FROM Pages"));
+        }
+        /// <summary>
+        /// Формируем вектор для страницы idPage1
+        /// </summary>
+        /// <param name="idPage1"></param>
+        /// <param name="idPage2"></param>
+        /// <returns></returns>
+        public static List<Dictionary<string, string>> GetVectorForPage(int idPage1, int idPage2)
+        {
+
+            var command = new SqlCommand("GetVectorForPages") { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@idPage1", idPage1);
+            command.Parameters.AddWithValue("@idPage2", idPage2);
+            return SQLByCommand(command);
         }
 
         public static int GetHostId(string hostName)
@@ -74,6 +107,50 @@ namespace Tools.Communication.SqlManager
 
             return idHost;
         }
+
+        /// <summary>
+        /// Возвращает всех пользователей
+        /// </summary>
+        /// <returns></returns>
+        public static List<Dictionary<string, string>> GetAllUsers()
+        {
+            return SQL("SELECT u.id FROM Users u");
+        }
+
+
+        /// <summary>
+        /// Возвращает странички пользователя и кол-во лемм найденных на каждой странице
+        /// </summary>
+        /// <returns></returns>
+        public static List<Dictionary<string, string>> GetUserPagesAndCountLemm(int userId)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(" SELECT p.URL,");
+            sb.AppendLine(" p.count_lemm");
+            sb.AppendLine("FROM Pages AS p");
+            sb.AppendLine("INNER JOIN user_and_pages AS uap ON (uap.id_page = p.id)");
+            sb.AppendLine("WHERE uap.id_user = @0 ");
+
+            return SQL(sb.ToString(), userId.ToString());
+        }
+
+
+        /// <summary>
+        /// Получаем логин юзера по ip
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static string GetUserLogin(string ip)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("SELECT u.[login] FROM Users u WHERE u.ip=@0");
+
+            return GetScalar(sb.ToString(), ip).ToString();
+
+        }
+        #endregion
+
+        #region AddMEthods
         /// <summary>
         /// Добавляем информацию о странице в БД
         /// </summary>
@@ -137,31 +214,30 @@ namespace Tools.Communication.SqlManager
             return -1;
 
         }
+
         /// <summary>
-        /// Проверяем есть ли юзер в БД
+        /// Добавляем лемму для конкретной страницы
         /// </summary>
-        /// <returns></returns>
-        public static int ExistsUser(string userId)
+        /// <param name="lemma">Лемма слова</param>
+        /// <param name="pageId">Идентификатор страницы</param>
+        /// <param name="freq"> Частота встречи слова</param>
+        public static void AddWord(string lemma, int pageId, string freq)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("SELECT");
-            sb.AppendLine("TOP 1 u.id");
-            sb.AppendLine("FROM");
-            sb.AppendLine("Users AS u");
-            sb.AppendLine("WHERE u.ip =@0");
+            sb.AppendLine(" INSERT INTO Words");
+            sb.AppendLine("(");
+            sb.AppendLine("word,");
+            sb.AppendLine("id_page,");
+            sb.AppendLine("frequency");
+            sb.AppendLine(" )");
+            sb.AppendLine("VALUES");
+            sb.AppendLine("(");
+            sb.AppendLine("@0,");
+            sb.AppendLine("@1,");
+            sb.AppendLine("@2");
+            sb.AppendLine(") ");
 
-            return Convert.ToInt32(GetScalar(sb.ToString(), userId));
-        }
-        /// <summary>
-        /// Получаем нового юзера или достаём id старого
-        /// </summary>
-        /// <param name="externalUserId"></param>
-        /// <param name="browserInfo"></param>
-        /// <returns></returns>
-        public static int GetUserId(string externalUserId, string browserInfo)
-        {
-            var userId = ExistsUser(externalUserId);
-            return userId <= 0 ? Convert.ToInt32(InsertNewUser(externalUserId, browserInfo)) : userId;
+            Exec(sb.ToString(), lemma, pageId.ToString(CultureInfo.InvariantCulture), freq.Replace(',', '.'));
         }
 
         public static object AddInfoFromPlugin(string externalUserId, string url, string browserInfo,string hostName)
@@ -180,6 +256,40 @@ namespace Tools.Communication.SqlManager
             return "Success";
 
         }
+        #endregion
+
+        #region ExistsMethod
+        /// <summary>
+        /// Проверяем есть ли такая url, за текущую дату
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static int ExistsPage(string url)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(" SELECT COUNT(*) From");
+            sb.AppendLine(" Pages pg ");
+            sb.AppendLine(" WHERE pg.url = @0 and pg.count_lemm > 0 ");
+            sb.AppendLine(" AND pg.[date] = CONVERT(varchar, GETDATE(), 102)");
+
+            return (int)GetScalar(sb.ToString(), url);
+        }
+        /// <summary>
+        /// Проверяем есть ли юзер в БД
+        /// </summary>
+        /// <returns></returns>
+        public static int ExistsUser(string userId)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("SELECT");
+            sb.AppendLine("TOP 1 u.id");
+            sb.AppendLine("FROM");
+            sb.AppendLine("Users AS u");
+            sb.AppendLine("WHERE u.ip =@0");
+
+            return Convert.ToInt32(GetScalar(sb.ToString(), userId));
+        }
+
         /// <summary>
         /// Метод проверяет есть ли страница у пользователя, 
         /// если есть, то обновляет кол-во просмотров
@@ -207,6 +317,8 @@ namespace Tools.Communication.SqlManager
 
             return exists;
         }
+
+        #endregion
         /// <summary>
         /// Добавляем данные в таблицу-связку юзеров и страниц
         /// </summary>
@@ -254,30 +366,7 @@ namespace Tools.Communication.SqlManager
 
             return GetScalar(sb.ToString(), browserInfo, userId);
         }
-        /// <summary>
-        /// Добавляем лемму для конкретной страницы
-        /// </summary>
-        /// <param name="lemma">Лемма слова</param>
-        /// <param name="pageId">Идентификатор страницы</param>
-        /// <param name="freq"> Частота встречи слова</param>
-        public static void AddWord(string lemma, int pageId, string freq)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(" INSERT INTO Words");
-            sb.AppendLine("(");
-            sb.AppendLine("word,");
-            sb.AppendLine("id_page,");
-            sb.AppendLine("frequency");
-            sb.AppendLine(" )");
-            sb.AppendLine("VALUES");
-            sb.AppendLine("(");
-            sb.AppendLine("@0,");
-            sb.AppendLine("@1,");
-            sb.AppendLine("@2");
-            sb.AppendLine(") ");
 
-            Exec(sb.ToString(), lemma, pageId.ToString(CultureInfo.InvariantCulture), freq.Replace(',', '.'));
-        }
         /// <summary>
         /// Обновляем логин
         /// </summary>
@@ -292,68 +381,10 @@ namespace Tools.Communication.SqlManager
             Exec(sb.ToString(), login, ip);
 
         }
-        /// <summary>
-        /// Возвращает всех пользователей
-        /// </summary>
-        /// <returns></returns>
-        public static List<Dictionary<string, string>> GetAllUsers()
-        {
-            return SQL("SELECT u.id FROM Users u");
-        }
-        /// <summary>
-        /// Возвращает странички пользователя и кол-во лемм найденных на каждой странице
-        /// </summary>
-        /// <returns></returns>
-        public static List<Dictionary<string, string>> GetUserPagesAndCountLemm(int userId)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(" SELECT p.URL,");
-            sb.AppendLine(" p.count_lemm");
-            sb.AppendLine("FROM Pages AS p");
-            sb.AppendLine("INNER JOIN user_and_pages AS uap ON (uap.id_page = p.id)");
-            sb.AppendLine("WHERE uap.id_user = @0 ");
-
-            return SQL(sb.ToString(), userId.ToString());
-        }
+      
 
 
-          
-        /// <summary>
-        /// Получаем логин юзера по ip
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <returns></returns>
-        public static string GetUserLogin(string ip)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("SELECT u.[login] FROM Users u WHERE u.ip=@0");
 
-            return GetScalar(sb.ToString(), ip).ToString();
 
-        }
-        /// <summary>
-        /// Проверяем есть ли такая url, за текущую дату
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        public static int ExistsPage(string url)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(" SELECT COUNT(*) From");
-            sb.AppendLine(" Pages pg ");
-            sb.AppendLine(" WHERE pg.url = @0");
-            sb.AppendLine("AND pg.[date] = CONVERT(varchar, GETDATE(), 102)");
-
-            return (int)GetScalar(sb.ToString(), url);
-        }
-
-        public static List<Dictionary<string, string>> GetVectorForPage(int idPage1, int idPage2)
-        {
-
-            var command = new SqlCommand("GetVectorForPages") { CommandType = CommandType.StoredProcedure };
-            command.Parameters.AddWithValue("@idPage1", idPage1);
-            command.Parameters.AddWithValue("@idPage2", idPage2);
-            return SQLByCommand(command);
-        }
     }
 }

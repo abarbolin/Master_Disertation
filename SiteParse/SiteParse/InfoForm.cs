@@ -38,7 +38,7 @@ namespace SiteParse
 
             var vect1 = SqlMethods.GetVectorForPage(siteId1, siteId2);
             var vect2 = SqlMethods.GetVectorForPage(siteId2, siteId1);
-            if (vect1.Count == vect2.Count)
+            if (vect1.Count == vect2.Count && vect1.Count >0)
             {
                 var vectDouble1 = HelpMethods.GetFrequenceArray(vect1); ;
 
@@ -46,7 +46,6 @@ namespace SiteParse
                 var distance = new EucledeanDistance().GetDistance(HelpMethods.ConvertFloatArrToObjectArr(vectDouble1),
                     HelpMethods.ConvertFloatArrToObjectArr(vectDouble2));
                 distanceLbl.Text = distance.ToString(CultureInfo.InvariantCulture);
-
             }
             else
             {
