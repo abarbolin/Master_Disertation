@@ -92,6 +92,7 @@ namespace SiteParse.Methods
                     if (!Helpers.ArraysEqual(prevStateCentroidVectors[initClusters[i].Id], initClusters[i].CentroidVector.Values.ToArray()))
                     {
                         stopingCriteria = false;
+                        break;
                     }
                 }
             }
