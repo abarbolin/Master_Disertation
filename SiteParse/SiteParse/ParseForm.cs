@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -435,28 +436,58 @@ namespace SiteParse
             {
                 SplitClusters(clusters, pages, arrayOfMeasure, avgOfMeasure, out stopFlag);
             }
-            var notSingleClusters = clusters.Where(c => c.PageList.Count > 2).ToList();
-            return notSingleClusters;
+
+            foreach (var clusterModel in clusters)
+            {
+                clusterModel.CalculateCentroidVector();
+                foreach (var pageModel in clusterModel.PageList)
+                {
+                    pageModel.ClusterId = clusterModel.Id;
+                }
+            }
+
+            return clusters;
         }
 
         private void testClusterBtn_Click(object sender, EventArgs e)
         {
+            var times = new List<string>();
+
             // Получаем первые n страниц
-            var pages = PageMethods.GetPageModelList(48, "tf_idf");
+            var pages = PageMethods.GetPageModelList(50, "tf_idf");
 
+            
 
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             var clustersAfterDivisive = DivisiveMethod(pages);
-            foreach (var clusterModel in clustersAfterDivisive)
-            {
-                clusterModel.CalculateCentroidVector();
-            }
+            stopWatch.Stop();
+            // Get the elapsed time as a TimeSpan value.
+            TimeSpan ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            times.Add(elapsedTime);
 
             // Количество кластеров
             //const int clusterCount = 3;
             // Инициализируем кластеры, выбирая рандомно clusterCount страниц, как центроиды кластеров
             //var initClusters = ClusterMethods.InitializeClusters(clusterCount, pages);
             // Применяем алгоритм kmeans
+            stopWatch = new Stopwatch();
+            stopWatch.Start();
             var clusters = ClusterizationMethods.KMeans(clustersAfterDivisive, pages);
+            stopWatch.Stop();
+            // Get the elapsed time as a TimeSpan value.
+            ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+             elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            times.Add(elapsedTime);
             foreach (var clusterModel in clusters)
             {
                 string pagesString = "=========================================" + Environment.NewLine;
